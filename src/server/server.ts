@@ -12,7 +12,7 @@ import {
 } from "vscode-languageserver/node";
 
 import { TextDocument } from "vscode-languageserver-textdocument";
-import { AbcLspServer } from "./AbcLspServer";
+import { AbcLspServer, vscode_standardTokenScopes } from "./AbcLspServer";
 
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -65,7 +65,9 @@ connection.onInitialize((params: InitializeParams) => {
   if (hasSemanticTokensCapability) {
     result.capabilities.semanticTokensProvider = {
       legend: {
-        tokenTypes: ["class", "function", "variable", "parameter", "property"],
+        tokenTypes: Object.keys(vscode_standardTokenScopes).filter((val) =>
+          Number.isNaN(parseInt(val, 10))
+        ),
         /*         Object.keys(TokenType).filter((val) =>
           Number.isNaN(parseInt(val, 10))
         ), */

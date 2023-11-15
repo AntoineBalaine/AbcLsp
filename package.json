@@ -9,29 +9,24 @@
   "categories": [
     "Programming Languages"
   ],
-  "activationEvents": [
-    "onLanguage:abc"
-  ],
   "main": "./out/extension.js",
+  "configurationDefaults": {
+    "abc": {
+      "editor.semanticHighlighting.enabled": true
+    }
+  },
   "contributes": {
     "languages": [
       {
         "id": "abc",
         "aliases": [
           "abc",
-          "abc"
+          "ABC"
         ],
         "extensions": [
           ".abc"
         ],
         "configuration": "./language-configuration.json"
-      }
-    ],
-    "grammars": [
-      {
-        "language": "abc",
-        "scopeName": "source.abc",
-        "path": "./syntaxes/abc.tmLanguage.json"
       }
     ]
   },
@@ -44,15 +39,21 @@
     "test": "node ./out/test/runTest.js"
   },
   "devDependencies": {
-    "@types/vscode": "^1.84.0",
     "@types/mocha": "^10.0.3",
     "@types/node": "18.x",
+    "@types/vscode": "^1.84.0",
     "@typescript-eslint/eslint-plugin": "^6.9.0",
     "@typescript-eslint/parser": "^6.9.0",
+    "@vscode/test-electron": "^2.3.6",
     "eslint": "^8.52.0",
     "glob": "^10.3.10",
     "mocha": "^10.2.0",
-    "typescript": "^5.2.2",
-    "@vscode/test-electron": "^2.3.6"
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "vscode": "^1.1.37",
+    "vscode-languageclient": "^9.0.1",
+    "vscode-languageserver": "^9.0.1",
+    "vscode-languageserver-textdocument": "^1.0.11"
   }
 }

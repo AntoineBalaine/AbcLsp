@@ -4,6 +4,7 @@ import {
   Chord,
   Comment,
   Decoration,
+  Expr,
   File_header,
   File_structure,
   Grace_group,
@@ -24,6 +25,7 @@ import {
   Tune_header,
   Visitor,
   YSPACER,
+  music_code,
 } from "../Parser/Expr";
 import Token from "../Parser/token";
 
@@ -33,10 +35,8 @@ export class TokensVisitor implements Visitor<void> {
   analyze(file_structure: File_structure) {
     this.visitFileStructureExpr(file_structure);
   }
+
   visitFileStructureExpr(file_structure: File_structure): void {
-    /**
-     * TODO implement visitor for file structure
-     */
     const { file_header, tune } = file_structure;
     if (file_header) {
       this.visitFileHeaderExpr(file_header);
@@ -66,11 +66,65 @@ export class TokensVisitor implements Visitor<void> {
         this.visitInfoLineExpr(tuneBody_element);
       } else if (tuneBody_element instanceof Music_code) {
         this.visitMusicCodeExpr(tuneBody_element);
+      } else if (isMusicCode(tuneBody_element)) {
+        if (tuneBody_element instanceof Token) {
+          this.tokens.push(tuneBody_element);
+        } else if (tuneBody_element instanceof YSPACER) {
+          if (tuneBody_element.number) {
+            this.tokens.push(
+              mergeTokens([tuneBody_element.ySpacer, tuneBody_element.number])
+            );
+          } else {
+            this.tokens.push(tuneBody_element.ySpacer);
+          }
+        } else if (tuneBody_element instanceof BarLine) {
+          this.visitBarLineExpr(tuneBody_element);
+        } else if (tuneBody_element instanceof Annotation) {
+          this.visitAnnotationExpr(tuneBody_element);
+        } else if (tuneBody_element instanceof Decoration) {
+          this.tokens.push(tuneBody_element.decoration);
+        } else if (tuneBody_element instanceof Note) {
+          this.visitNoteExpr(tuneBody_element);
+        } else if (tuneBody_element instanceof Grace_group) {
+          tuneBody_element.notes.forEach((note) => {
+            this.visitNoteExpr(note);
+          });
+        } else if (tuneBody_element instanceof Nth_repeat) {
+          this.tokens.push(tuneBody_element.repeat);
+        } else if (tuneBody_element instanceof Inline_field) {
+          this.tokens.push(tuneBody_element.field);
+          this.tokens.push(mergeTokens(tuneBody_element.text));
+        } else if (tuneBody_element instanceof Chord) {
+          tuneBody_element.contents.forEach((content) => {
+            if (content instanceof Token) {
+              this.tokens.push(content);
+            } else if (content instanceof Note) {
+              this.visitNoteExpr(content);
+            } else {
+              this.tokens.push(content.text);
+            }
+          });
+          if (tuneBody_element.rhythm) {
+            this.visitRhythmExpr(tuneBody_element.rhythm);
+          }
+        } else if (tuneBody_element instanceof Symbol) {
+          this.tokens.push(tuneBody_element.symbol);
+        } else if (tuneBody_element instanceof MultiMeasureRest) {
+          if (tuneBody_element.length) {
+            this.tokens.push(
+              mergeTokens([tuneBody_element.rest, tuneBody_element.length])
+            );
+          } else {
+            this.tokens.push(tuneBody_element.rest);
+          }
+        } else if (tuneBody_element instanceof Slur_group) {
+          this.visitSlurGroupExpr(tuneBody_element);
+        }
       }
     });
   }
   visitMusicCodeExpr(element: Music_code) {
-    element.contents.forEach((content) => {
+    element.contents.forEach((content: music_code) => {
       if (content instanceof Token) {
         this.tokens.push(content);
       } else if (content instanceof YSPACER) {
@@ -105,7 +159,6 @@ export class TokensVisitor implements Visitor<void> {
           } else {
             this.tokens.push(content.text);
           }
-          // TODO account for rhythm
         });
         if (content.rhythm) {
           this.visitRhythmExpr(content.rhythm);
@@ -203,4 +256,22 @@ const mergeTokens = (tokens: Array<Token>) => {
     prev.lexeme = prev.lexeme + cur.lexeme;
     return prev;
   });
+};
+
+const isMusicCode = (element: Expr | music_code): element is music_code => {
+  return (
+    element instanceof Token ||
+    element instanceof YSPACER ||
+    element instanceof BarLine ||
+    element instanceof Annotation ||
+    element instanceof Decoration ||
+    element instanceof Note ||
+    element instanceof Grace_group ||
+    element instanceof Nth_repeat ||
+    element instanceof Inline_field ||
+    element instanceof Chord ||
+    element instanceof Symbol ||
+    element instanceof MultiMeasureRest ||
+    element instanceof Slur_group
+  );
 };

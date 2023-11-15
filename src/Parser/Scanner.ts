@@ -7,7 +7,7 @@ export default class Scanner {
   private tokens: Array<Token> = new Array();
   private start = 0;
   private current = 0;
-  private line = 1;
+  private line = 0;
   constructor(source: string) {
     this.source = source;
   }
@@ -41,7 +41,7 @@ export default class Scanner {
         this.addToken(TokenType.APOSTROPHE);
         break;
       case "\\":
-        if (this.peek() == "\n" && !this.isAtEnd()) {
+        if (this.peek() === "\n" && !this.isAtEnd()) {
           this.advance();
           this.addToken(TokenType.EOL);
         }
@@ -49,8 +49,8 @@ export default class Scanner {
       case "|": {
         const pkd = this.peek();
         if (
-          // TODO for now, only allow one digit after barline
-          (pkd == ":" || pkd == "|" || pkd == "]" || /[0-9]/.test(pkd)) &&
+          // TODO for now, only allow one digit after barline
+          (pkd === ":" || pkd === "|" || pkd === "]" || /[0-9]/.test(pkd)) &&
           !this.isAtEnd()
         ) {
           this.advance();
@@ -81,16 +81,18 @@ export default class Scanner {
         break;
       case ":": {
         const pkd = this.peek();
-        if ((pkd == "|" || pkd == ":") && !this.isAtEnd()) {
+        if ((pkd === "|" || pkd === ":") && !this.isAtEnd()) {
           this.advance();
-          if (pkd == "|") {
+          if (pkd === "|") {
             if (/[0-9]/.test(this.peek())) {
               this.advance();
               this.addToken(TokenType.COLON_BAR_DIGIT);
             } else {
               this.addToken(TokenType.COLON_BAR);
             }
-          } else if (pkd == ":") this.addToken(TokenType.COLON_DBL);
+          } else if (pkd === ":") {
+            this.addToken(TokenType.COLON_DBL);
+          }
         } else {
           this.addToken(TokenType.COLON);
         }
@@ -115,8 +117,8 @@ export default class Scanner {
         this.addToken(TokenType.DOT);
         break;
       case "\n":
-        this.line++;
         this.addToken(TokenType.EOL);
+        this.line++;
         break;
       case "_":
         if (this.peek() === "_") {
@@ -158,7 +160,9 @@ export default class Scanner {
         if (this.isDigit(this.peek())) {
           while (this.isDigit(this.peek())) this.advance();
           this.addToken(TokenType.LEFTPAREN_NUMBER);
-        } else this.addToken(TokenType.LEFTPAREN);
+        } else {
+          this.addToken(TokenType.LEFTPAREN);
+        }
         break;
       case "<":
         while (this.peek() === "<" && !this.isAtEnd()) {
@@ -233,7 +237,9 @@ export default class Scanner {
             this.addToken(TokenType.LETTER_COLON);
           } else if (/[a-gA-G]/.test(c)) {
             this.addToken(TokenType.NOTE_LETTER);
-          } else this.addToken(TokenType.LETTER);
+          } else {
+            this.addToken(TokenType.LETTER);
+          }
         } else if (this.isReservedChar(c)) {
           this.addToken(TokenType.RESERVED_CHAR);
         } else {
@@ -269,8 +275,10 @@ export default class Scanner {
   }
   private string() {
     //jump to end of string
-    while (this.peek() != '"' && !this.isAtEnd()) {
-      if (this.peek() == "\n") this.line++;
+    while (this.peek() !== '"' && !this.isAtEnd()) {
+      if (this.peek() === "\n") {
+        this.line++;
+      }
       this.advance();
     }
     if (this.isAtEnd()) {
@@ -285,7 +293,9 @@ export default class Scanner {
   }
 
   private match(expected: string): boolean {
-    if (this.isAtEnd()) return false;
+    if (this.isAtEnd()) {
+      return false;
+    }
     if (this.source.charAt(this.current) !== expected) {
       return false;
     }
@@ -294,14 +304,18 @@ export default class Scanner {
   }
 
   private peek() {
-    if (this.isAtEnd()) return "\0";
+    if (this.isAtEnd()) {
+      return "\0";
+    }
     return this.source.charAt(this.current);
   }
 
   // could provided peek() with the capability to
   // have arbitrary size lookahead, but no.
   private peekNext() {
-    if (this.current + 1 >= this.source.length) return "\0";
+    if (this.current + 1 >= this.source.length) {
+      return "\0";
+    }
     return this.source.charAt(this.current + 1);
   }
 
@@ -311,7 +325,7 @@ export default class Scanner {
   }
   private isAlpha(c: string) {
     return (
-      (c >= "a" && c <= "z") || (c >= "A" && c <= "Z") || c == "_" || c == "&"
+      (c >= "a" && c <= "z") || (c >= "A" && c <= "Z") || c === "_" || c === "&"
     );
   }
 
@@ -333,9 +347,10 @@ export default class Scanner {
 
   private addToken(type: TokenType, literal?: any | null) {
     const text = this.source.substring(this.start, this.current);
-    const lineBreak = this.source.lastIndexOf("\n", this.current);
-    const charPos = this.current - lineBreak - 1;
+    let lineBreak =
+      this.line === 0 ? 0 : this.source.lastIndexOf("\n", this.current) + 1;
 
+    let charPos = this.start - lineBreak;
     this.tokens.push(
       new Token(type, text, literal || null, this.line, charPos)
     );

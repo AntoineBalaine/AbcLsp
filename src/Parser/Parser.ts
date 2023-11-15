@@ -655,7 +655,7 @@ export class Parser {
   private error(token: Token, message: string): Error {
     // get the currentline
     if (this.source) {
-      const curLin = this.source.substring(0).split("\n")[token.line - 1];
+      const curLin = this.source.substring(0).split("\n")[token.line - 1]; //TODO double check now that lines are 0-indexed
       const test = `${curLin}\n` + " ".repeat(token.position) + "^";
       // add a caret under the token
       //const caret = " ".repeat(token.position) + "^"

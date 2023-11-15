@@ -30,7 +30,7 @@ export function activate(context: ExtensionContext) {
     debug: {
       module: serverModule,
       transport: TransportKind.ipc,
-      // options: debugOptions,
+      options: debugOptions,
     },
   };
 

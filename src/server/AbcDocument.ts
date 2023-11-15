@@ -2,7 +2,7 @@ import { Diagnostic } from "vscode-languageserver";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { Parser } from "../Parser/Parser";
 import Scanner from "../Parser/Scanner";
-import { getError } from "../Parser/error";
+import { getError, setError } from "../Parser/error";
 import Token from "../Parser/token";
 import { TokensVisitor } from "./SemanticTokens";
 
@@ -17,8 +17,12 @@ export class AbcDocument {
 
     this.diagnostics = [];
     this.tokens = [];
+    /**
+     * TODO build reporter for diagnostics
+     */
 
     this.hadError = false;
+    setError(false);
     const tokens = new Scanner(source).scanTokens();
     const parser = new Parser(tokens, source);
     const statements = parser.parse();

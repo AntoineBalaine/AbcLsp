@@ -12,7 +12,6 @@ import {
 } from "vscode-languageserver/node";
 
 import { TextDocument } from "vscode-languageserver-textdocument";
-import { TokenType } from "../Parser/types";
 import { AbcLspServer } from "./AbcLspServer";
 
 // Create a connection for the server, using Node's IPC as a transport.
@@ -27,7 +26,6 @@ const abcServer = new AbcLspServer(documents, (type, params) => {
     case "diagnostics":
       connection.sendDiagnostics(params);
       break;
-
     default:
       break;
   }
@@ -44,6 +42,11 @@ connection.onInitialize((params: InitializeParams) => {
       referencesProvider: true,
     },
   };
+  result.capabilities.documentHighlightProvider = false;
+  result.capabilities.renameProvider = {
+    prepareProvider: false,
+  };
+  result.capabilities.documentSymbolProvider = false;
   /*   if (capabilities.textDocument?.documentHighlight) {
     result.capabilities.documentHighlightProvider = true;
   }
@@ -62,14 +65,16 @@ connection.onInitialize((params: InitializeParams) => {
   if (hasSemanticTokensCapability) {
     result.capabilities.semanticTokensProvider = {
       legend: {
-        tokenTypes: Object.keys(TokenType),
+        tokenTypes: ["class", "function", "variable", "parameter", "property"],
+        /*         Object.keys(TokenType).filter((val) =>
+          Number.isNaN(parseInt(val, 10))
+        ), */
         tokenModifiers: [],
       },
       range: false,
       full: true,
     };
   }
-
   return result;
 });
 connection.onInitialized(() => {});

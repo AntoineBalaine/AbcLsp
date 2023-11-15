@@ -28,7 +28,6 @@ export class AbcLspServer {
     });
   }
   onDidChangeContent(uri: string) {
-    console.log("change");
     let abcDocument = this.abcDocuments.get(uri);
     if (!abcDocument) {
       const document = this.documents.get(uri);
@@ -59,7 +58,7 @@ export class AbcLspServer {
         token.line,
         token.position,
         token.lexeme.length,
-        token.type,
+        token.type, // typeId TODO figure out the correct typings
         0
       );
     }

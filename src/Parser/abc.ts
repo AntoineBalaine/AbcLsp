@@ -24,7 +24,9 @@ function runFile(path: string) {
     encoding: "utf8",
   });
   run(bytes);
-  if (getError()) return;
+  if (getError()) {
+    return;
+  }
 }
 
 function runPrompt() {

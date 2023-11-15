@@ -1,6 +1,6 @@
 {
-  "name": "jsabc-remake",
-  "displayName": "jsabc_remake",
+  "name": "abc_lsp",
+  "displayName": "abc_lsp",
   "description": "",
   "version": "0.0.1",
   "engines": {
@@ -9,13 +9,16 @@
   "categories": [
     "Programming Languages"
   ],
+  "activationEvents": [
+    "onLanguage:abc"
+  ],
   "main": "./out/extension.js",
-  "configurationDefaults": {
-    "abc": {
-      "editor.semanticHighlighting.enabled": true
-    }
-  },
   "contributes": {
+    "configurationDefaults": {
+      "[abc]": {
+        "editor.semanticHighlighting.enabled": true
+      }
+    },
     "languages": [
       {
         "id": "abc",

@@ -29,6 +29,9 @@
         "extensions": [
           ".abc"
         ],
+        "capabilities": {
+          "documentFormattingProvider": "true"
+        },
         "configuration": "./language-configuration.json"
       }
     ]

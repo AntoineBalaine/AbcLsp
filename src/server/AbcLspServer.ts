@@ -1,9 +1,12 @@
 import {
   HandlerResult,
+  Position,
   PublishDiagnosticsParams,
+  Range,
   SemanticTokens,
   SemanticTokensBuilder,
   TextDocuments,
+  TextEdit,
 } from "vscode-languageserver";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { TokenType } from "../Parser/types";
@@ -65,6 +68,25 @@ export class AbcLspServer {
     }
 
     return builder.build();
+  }
+
+  onFormat(uri: string): HandlerResult<TextEdit[], void> {
+    const abcDocument = this.abcDocuments.get(uri); // find doc in previously parsed docs
+    if (!abcDocument || !abcDocument.tokens) {
+      return [];
+    }
+    const formatted = abcDocument.tokens.reduce((acc, token): string => {
+      acc += token.lexeme;
+      return acc;
+    }, "");
+    const edit = TextEdit.replace(
+      Range.create(
+        Position.create(0, 0),
+        Position.create(Number.MAX_VALUE, Number.MAX_VALUE) // TODO is this really reasonable?
+      ),
+      formatted
+    );
+    return [edit];
   }
 }
 

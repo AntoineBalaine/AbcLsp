@@ -77,6 +77,15 @@ connection.onInitialize((params: InitializeParams) => {
       full: true,
     };
   }
+
+  const hasFormattingCapability =
+    !!capabilities.textDocument?.formatting?.dynamicRegistration;
+  console.log("hasFormattingCapability", hasFormattingCapability);
+
+  if (hasFormattingCapability) {
+    result.capabilities.documentFormattingProvider = true;
+  }
+
   return result;
 });
 connection.onInitialized(() => {});
@@ -84,5 +93,8 @@ connection.languages.semanticTokens.on((params) => {
   return abcServer.onSemanticTokens(params.textDocument.uri);
 });
 
+connection.onDocumentFormatting((params) =>
+  abcServer.onFormat(params.textDocument.uri)
+);
 documents.listen(connection);
 connection.listen();

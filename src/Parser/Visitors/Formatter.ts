@@ -50,9 +50,9 @@ export class AbcFormatter implements Visitor<string> {
       })
       .join("");
     if (expr.rhythm) {
-      return str + this.visitRhythmExpr(expr.rhythm);
+      return `[${str}${this.visitRhythmExpr(expr.rhythm)}]`;
     } else {
-      return str;
+      return `[${str}]`;
     }
   }
   visitCommentExpr(expr: Comment) {
@@ -87,16 +87,14 @@ export class AbcFormatter implements Visitor<string> {
   }
   visitInfoLineExpr(expr: Info_line) {
     const { key, value } = expr;
-    const formattedVal = value
-      .map((val) => {
-        val.lexeme === null ? "" : val.lexeme; // TODO double check this
-      })
-      .join("");
-    return `${key.lexeme}: ${value}\n`;
+    const formattedVal = value.map((val) => val.lexeme).join("");
+    return `${key.lexeme}${formattedVal}\n`;
   }
   visitInlineFieldExpr(expr: Inline_field) {
+    // TODO fix Inline_field parsing (numbers causing issue)
     const { field, text } = expr;
-    return `[${field.lexeme}: ${text}]`;
+    const formattedText = text.map((val) => val.lexeme).join("");
+    return `[${field.lexeme}${formattedText}]`;
   }
   visitLyricSectionExpr(expr: Lyric_section) {
     return expr.info_lines
@@ -106,7 +104,7 @@ export class AbcFormatter implements Visitor<string> {
       .join("\n");
   }
   visitMultiMeasureRestExpr(expr: MultiMeasureRest) {
-    return `| ${expr.rest.lexeme}${expr.length ? expr.length.lexeme : ""} |`; // TODO do I need the bar lines?
+    return `${expr.rest.lexeme}${expr.length ? expr.length.lexeme : ""}`; // TODO do I need the bar lines?
   }
   visitMusicCodeExpr(expr: Music_code) {
     return expr.contents

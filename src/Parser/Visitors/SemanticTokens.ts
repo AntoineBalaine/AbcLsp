@@ -196,16 +196,13 @@ export class TokensVisitor implements Visitor<void> {
     }
   }
   visitRhythmExpr(rhythm: Rhythm) {
-    this.tokens.push(
-      mergeTokens(
-        [
-          rhythm.numerator,
-          rhythm.separator,
-          rhythm.denominator,
-          rhythm.broken,
-        ].filter((token): token is Token => !!token)
-      )
+    const { numerator, separator, denominator, broken } = rhythm;
+    const list = [numerator, separator, denominator, broken].filter(
+      (e): e is Token => !!e
     );
+    list.forEach((element) => {
+      this.tokens.push(element);
+    });
   }
   visitPitchExpr(pitch: Pitch) {
     if (pitch.alteration) {
@@ -235,7 +232,7 @@ export class TokensVisitor implements Visitor<void> {
   visitGraceGroupExpr(e: Grace_group) {}
   visitInlineFieldExpr(e: Inline_field) {}
   visitLyricSectionExpr(e: Lyric_section) {}
-  visitMultiMeasureRestExpr(e: MultiMeasureRest) {}
+  visitMultiMeasureRestExpr(e: MultiMeasureRest) {} // TODO
   visitNthRepeatExpr(e: Nth_repeat) {}
   visitRestExpr(e: Rest) {}
   visitSymbolExpr(e: Symbol) {}
@@ -247,15 +244,19 @@ export class TokensVisitor implements Visitor<void> {
  * TODO double check this
  */
 export const mergeTokens = (tokens: Array<Token>) => {
-  //iterate through tokens and merge them
-  //return merged token
-  return tokens.reduce((prev, cur, index) => {
-    if (index === 0) {
+  return tokens
+    .map((t) => cloneToken(t))
+    .reduce((prev, cur, index) => {
+      if (index === 0) {
+        return prev;
+      }
+      prev.lexeme = prev.lexeme + cur.lexeme;
       return prev;
-    }
-    prev.lexeme = prev.lexeme + cur.lexeme;
-    return prev;
-  });
+    });
+};
+
+export const cloneToken = (token: Token) => {
+  return new Token(token.type, token.lexeme, null, token.line, token.position);
 };
 
 const isMusicCode = (element: Expr | music_code): element is music_code => {

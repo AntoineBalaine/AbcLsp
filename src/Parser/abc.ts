@@ -10,7 +10,7 @@ export let hadError = false;
 
 const main = (args: string[]) => {
   if (args.length > 1) {
-    console.log("Usage: jlox [script]");
+    console.log("Usage: abc [script]");
     return;
   } else if (args.length === 1) {
     runFile(args[0]);

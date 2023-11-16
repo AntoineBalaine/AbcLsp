@@ -146,7 +146,9 @@ export default class Scanner {
           this.advance();
           this.addToken(TokenType.LEFTBRKT_BAR);
         } else if (this.isDigit(pkd)) {
-          while (this.isDigit(this.peek())) this.advance();
+          while (this.isDigit(this.peek())) {
+            this.advance();
+          }
           this.addToken(TokenType.LEFTBRKT_NUMBER);
         } else {
           this.addToken(TokenType.LEFTBRKT);
@@ -158,7 +160,9 @@ export default class Scanner {
         break;
       case "(":
         if (this.isDigit(this.peek())) {
-          while (this.isDigit(this.peek())) this.advance();
+          while (this.isDigit(this.peek())) {
+            this.advance();
+          }
           this.addToken(TokenType.LEFTPAREN_NUMBER);
         } else {
           this.addToken(TokenType.LEFTPAREN);
@@ -267,7 +271,9 @@ export default class Scanner {
 
   private number() {
     // only INTEGERS
-    while (this.isDigit(this.peek())) this.advance();
+    while (this.isDigit(this.peek())) {
+      this.advance();
+    }
     this.addToken(
       TokenType.NUMBER,
       Number(this.source.substring(this.start, this.current))

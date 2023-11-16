@@ -26,8 +26,8 @@ import {
   Visitor,
   YSPACER,
   music_code,
-} from "../Parser/Expr";
-import Token from "../Parser/token";
+} from "../Expr";
+import Token from "../token";
 
 export class TokensVisitor implements Visitor<void> {
   public tokens: Array<Token> = [];
@@ -246,7 +246,7 @@ export class TokensVisitor implements Visitor<void> {
 /**
  * TODO double check this
  */
-const mergeTokens = (tokens: Array<Token>) => {
+export const mergeTokens = (tokens: Array<Token>) => {
   //iterate through tokens and merge them
   //return merged token
   return tokens.reduce((prev, cur, index) => {

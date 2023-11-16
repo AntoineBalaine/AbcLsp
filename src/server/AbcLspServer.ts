@@ -9,6 +9,7 @@ import {
   TextEdit,
 } from "vscode-languageserver";
 import { TextDocument } from "vscode-languageserver-textdocument";
+import { AbcFormatter } from "../Parser/Visitors/Formatter";
 import { TokenType } from "../Parser/types";
 import { AbcDocument } from "./AbcDocument";
 
@@ -75,10 +76,8 @@ export class AbcLspServer {
     if (!abcDocument || !abcDocument.tokens) {
       return [];
     }
-    const formatted = abcDocument.tokens.reduce((acc, token): string => {
-      acc += token.lexeme;
-      return acc;
-    }, "");
+
+    const formatted = new AbcFormatter().format(abcDocument.AST!);
     const edit = TextEdit.replace(
       Range.create(
         Position.create(0, 0),

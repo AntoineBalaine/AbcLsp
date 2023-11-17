@@ -4,7 +4,6 @@ import {
   Chord,
   Comment,
   Decoration,
-  Expr,
   File_header,
   File_structure,
   Grace_group,
@@ -33,21 +32,21 @@ export class TokensVisitor implements Visitor<void> {
   public tokens: Array<Token> = [];
 
   analyze(file_structure: File_structure) {
-    this.visitFileStructureExpr(file_structure);
+    file_structure.accept(this);
   }
 
   visitFileStructureExpr(file_structure: File_structure): void {
     const { file_header, tune } = file_structure;
     if (file_header) {
-      this.visitFileHeaderExpr(file_header);
+      file_header.accept(this);
     }
     tune.forEach((tune) => {
       const { tune_header, tune_body } = tune;
       if (!tune_body) {
         return;
       }
-      this.visitTuneHeaderExpr(tune_header);
-      this.visitTuneBodyExpr(tune_body);
+      tune_header.accept(this);
+      tune_body.accept(this);
     });
   }
   visitFileHeaderExpr(file_header: File_header) {
@@ -55,71 +54,15 @@ export class TokensVisitor implements Visitor<void> {
   }
   visitTuneHeaderExpr(tune_header: Tune_header): void {
     tune_header?.info_lines.forEach((info_line) => {
-      this.visitInfoLineExpr(info_line);
+      info_line.accept(this);
     });
   }
   visitTuneBodyExpr(tune_body: Tune_Body): void {
     tune_body?.sequence.forEach((tuneBody_element) => {
-      if (tuneBody_element instanceof Comment) {
-        this.visitCommentExpr(tuneBody_element);
-      } else if (tuneBody_element instanceof Info_line) {
-        this.visitInfoLineExpr(tuneBody_element);
-      } else if (tuneBody_element instanceof Music_code) {
-        this.visitMusicCodeExpr(tuneBody_element);
-      } else if (isMusicCode(tuneBody_element)) {
-        if (tuneBody_element instanceof Token) {
-          this.tokens.push(tuneBody_element);
-        } else if (tuneBody_element instanceof YSPACER) {
-          if (tuneBody_element.number) {
-            this.tokens.push(
-              mergeTokens([tuneBody_element.ySpacer, tuneBody_element.number])
-            );
-          } else {
-            this.tokens.push(tuneBody_element.ySpacer);
-          }
-        } else if (tuneBody_element instanceof BarLine) {
-          this.visitBarLineExpr(tuneBody_element);
-        } else if (tuneBody_element instanceof Annotation) {
-          this.visitAnnotationExpr(tuneBody_element);
-        } else if (tuneBody_element instanceof Decoration) {
-          this.tokens.push(tuneBody_element.decoration);
-        } else if (tuneBody_element instanceof Note) {
-          this.visitNoteExpr(tuneBody_element);
-        } else if (tuneBody_element instanceof Grace_group) {
-          tuneBody_element.notes.forEach((note) => {
-            this.visitNoteExpr(note);
-          });
-        } else if (tuneBody_element instanceof Nth_repeat) {
-          this.tokens.push(tuneBody_element.repeat);
-        } else if (tuneBody_element instanceof Inline_field) {
-          this.tokens.push(tuneBody_element.field);
-          this.tokens.push(mergeTokens(tuneBody_element.text));
-        } else if (tuneBody_element instanceof Chord) {
-          tuneBody_element.contents.forEach((content) => {
-            if (content instanceof Token) {
-              this.tokens.push(content);
-            } else if (content instanceof Note) {
-              this.visitNoteExpr(content);
-            } else {
-              this.tokens.push(content.text);
-            }
-          });
-          if (tuneBody_element.rhythm) {
-            this.visitRhythmExpr(tuneBody_element.rhythm);
-          }
-        } else if (tuneBody_element instanceof Symbol) {
-          this.tokens.push(tuneBody_element.symbol);
-        } else if (tuneBody_element instanceof MultiMeasureRest) {
-          if (tuneBody_element.length) {
-            this.tokens.push(
-              mergeTokens([tuneBody_element.rest, tuneBody_element.length])
-            );
-          } else {
-            this.tokens.push(tuneBody_element.rest);
-          }
-        } else if (tuneBody_element instanceof Slur_group) {
-          this.visitSlurGroupExpr(tuneBody_element);
-        }
+      if (tuneBody_element instanceof Token) {
+        this.tokens.push(tuneBody_element);
+      } else {
+        tuneBody_element.accept(this);
       }
     });
   }
@@ -127,52 +70,8 @@ export class TokensVisitor implements Visitor<void> {
     element.contents.forEach((content: music_code) => {
       if (content instanceof Token) {
         this.tokens.push(content);
-      } else if (content instanceof YSPACER) {
-        if (content.number) {
-          this.tokens.push(mergeTokens([content.ySpacer, content.number]));
-        } else {
-          this.tokens.push(content.ySpacer);
-        }
-      } else if (content instanceof BarLine) {
-        this.visitBarLineExpr(content);
-      } else if (content instanceof Annotation) {
-        this.visitAnnotationExpr(content);
-      } else if (content instanceof Decoration) {
-        this.tokens.push(content.decoration);
-      } else if (content instanceof Note) {
-        this.visitNoteExpr(content);
-      } else if (content instanceof Grace_group) {
-        content.notes.forEach((note) => {
-          this.visitNoteExpr(note);
-        });
-      } else if (content instanceof Nth_repeat) {
-        this.tokens.push(content.repeat);
-      } else if (content instanceof Inline_field) {
-        this.tokens.push(content.field);
-        this.tokens.push(mergeTokens(content.text));
-      } else if (content instanceof Chord) {
-        content.contents.forEach((content) => {
-          if (content instanceof Token) {
-            this.tokens.push(content);
-          } else if (content instanceof Note) {
-            this.visitNoteExpr(content);
-          } else {
-            this.tokens.push(content.text);
-          }
-        });
-        if (content.rhythm) {
-          this.visitRhythmExpr(content.rhythm);
-        }
-      } else if (content instanceof Symbol) {
-        this.tokens.push(content.symbol);
-      } else if (content instanceof MultiMeasureRest) {
-        if (content.length) {
-          this.tokens.push(mergeTokens([content.rest, content.length]));
-        } else {
-          this.tokens.push(content.rest);
-        }
-      } else if (content instanceof Slur_group) {
-        this.visitSlurGroupExpr(content);
+      } else {
+        content.accept(this);
       }
     });
   }
@@ -186,10 +85,10 @@ export class TokensVisitor implements Visitor<void> {
     if (content.pitch instanceof Rest) {
       this.tokens.push(content.pitch.rest);
     } else {
-      this.visitPitchExpr(content.pitch);
+      content.pitch.accept(this);
     }
     if (content.rhythm) {
-      this.visitRhythmExpr(content.rhythm);
+      content.rhythm.accept(this);
     }
     if (content.tie) {
       // TODO do nothing for now, ignore
@@ -213,11 +112,14 @@ export class TokensVisitor implements Visitor<void> {
       this.tokens.push(pitch.octave);
     }
   }
-  visitSlurGroupExpr(content: Slur_group) {
-    /**
-     * TODO double check this
-     */
-    this.visitMusicCodeExpr(content as Music_code);
+  visitSlurGroupExpr(expr: Slur_group) {
+    expr.contents.forEach((e) => {
+      if (e instanceof Token) {
+        this.tokens.push(e);
+      } else {
+        e.accept(this);
+      }
+    });
   }
   visitInfoLineExpr(element: Info_line) {
     const { key, value } = element;
@@ -227,17 +129,60 @@ export class TokensVisitor implements Visitor<void> {
   visitCommentExpr(element: Comment) {
     this.tokens.push(element.token);
   }
-  visitChordExpr(e: Chord) {}
-  visitDecorationExpr(e: Decoration) {}
-  visitGraceGroupExpr(e: Grace_group) {}
-  visitInlineFieldExpr(e: Inline_field) {}
-  visitLyricSectionExpr(e: Lyric_section) {}
-  visitMultiMeasureRestExpr(e: MultiMeasureRest) {} // TODO
-  visitNthRepeatExpr(e: Nth_repeat) {}
-  visitRestExpr(e: Rest) {}
-  visitSymbolExpr(e: Symbol) {}
-  visitTuneExpr(e: Tune) {}
-  visitYSpacerExpr(e: YSPACER) {}
+  visitChordExpr(e: Chord) {
+    e.contents.forEach((content) => {
+      if (content instanceof Token) {
+        this.tokens.push(content);
+      } else {
+        content.accept(this);
+      }
+    });
+    if (e.rhythm) {
+      e.rhythm.accept(this);
+    }
+  }
+  visitDecorationExpr(e: Decoration) {
+    this.tokens.push(e.decoration);
+  }
+  visitGraceGroupExpr(e: Grace_group) {
+    e.notes.forEach((e) => {
+      e.accept(this);
+    });
+  }
+  visitInlineFieldExpr(e: Inline_field) {
+    this.tokens.push(e.field);
+    e.text.forEach((element) => {
+      this.tokens.push(element);
+    });
+  }
+  visitLyricSectionExpr(e: Lyric_section) {
+    e.info_lines.forEach((e) => {
+      e.accept(this);
+    });
+  }
+  visitMultiMeasureRestExpr(e: MultiMeasureRest) {
+    this.tokens.push(e.rest);
+    e.length && this.tokens.push(e.length);
+  }
+  visitNthRepeatExpr(e: Nth_repeat) {
+    this.tokens.push(e.repeat);
+  }
+  visitRestExpr(e: Rest) {
+    this.tokens.push(e.rest);
+  }
+  visitSymbolExpr(e: Symbol) {
+    this.tokens.push(e.symbol);
+  }
+  visitTuneExpr(e: Tune) {
+    e.tune_header.accept(this);
+    if (e.tune_body) {
+      e.tune_body.accept(this);
+    }
+  }
+  visitYSpacerExpr(e: YSPACER) {
+    this.tokens.push(e.ySpacer);
+    e.number && this.tokens.push(e.number);
+  }
 }
 
 /**
@@ -257,22 +202,4 @@ export const mergeTokens = (tokens: Array<Token>) => {
 
 export const cloneToken = (token: Token) => {
   return new Token(token.type, token.lexeme, null, token.line, token.position);
-};
-
-const isMusicCode = (element: Expr | music_code): element is music_code => {
-  return (
-    element instanceof Token ||
-    element instanceof YSPACER ||
-    element instanceof BarLine ||
-    element instanceof Annotation ||
-    element instanceof Decoration ||
-    element instanceof Note ||
-    element instanceof Grace_group ||
-    element instanceof Nth_repeat ||
-    element instanceof Inline_field ||
-    element instanceof Chord ||
-    element instanceof Symbol ||
-    element instanceof MultiMeasureRest ||
-    element instanceof Slur_group
-  );
 };

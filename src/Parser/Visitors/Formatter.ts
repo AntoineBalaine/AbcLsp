@@ -29,7 +29,7 @@ import Token from "../token";
 
 export class AbcFormatter implements Visitor<string> {
   format(file_structure: File_structure) {
-    return this.visitFileStructureExpr(file_structure);
+    return file_structure.accept(this);
   }
   visitAnnotationExpr(expr: Annotation) {
     return expr.text.lexeme;
@@ -37,20 +37,18 @@ export class AbcFormatter implements Visitor<string> {
   visitBarLineExpr(expr: BarLine) {
     return expr.barline.lexeme;
   }
-  visitChordExpr(expr: Chord) {
+  visitChordExpr(expr: Chord): string {
     const str = expr.contents
-      .map((content) => {
-        if (content instanceof Annotation) {
-          return this.visitAnnotationExpr(content);
-        } else if (content instanceof Note) {
-          return this.visitNoteExpr(content);
-        } else {
+      .map((content): string => {
+        if (content instanceof Token) {
           return content.lexeme;
+        } else {
+          return content.accept(this);
         }
       })
       .join("");
     if (expr.rhythm) {
-      return `[${str}${this.visitRhythmExpr(expr.rhythm)}]`;
+      return `[${str}]${expr.rhythm.accept(this)}`;
     } else {
       return `[${str}]`;
     }
@@ -68,20 +66,20 @@ export class AbcFormatter implements Visitor<string> {
   visitFileStructureExpr(expr: File_structure) {
     let formattedFile = "";
     if (expr.file_header) {
-      formattedFile += this.visitFileHeaderExpr(expr.file_header);
+      formattedFile += expr.file_header.accept(this);
     }
-    const formattedTunes = expr.tune.map((tune) => {
-      return this.visitTuneExpr(tune);
+    const formattedTunes = expr.tune.map((tune): string => {
+      return tune.accept(this);
     });
     return (
       formattedFile + formattedTunes.join(formattedFile.length > 0 ? "\n" : "")
     );
   }
-  visitGraceGroupExpr(expr: Grace_group) {
+  visitGraceGroupExpr(expr: Grace_group): string {
     // TODO implement accaciatura formatting
     return expr.notes
       .map((note) => {
-        return this.visitNoteExpr(note);
+        return note.accept(this);
       })
       .join("");
   }
@@ -98,57 +96,30 @@ export class AbcFormatter implements Visitor<string> {
   }
   visitLyricSectionExpr(expr: Lyric_section) {
     return expr.info_lines
-      .map((info_line) => {
-        return this.visitInfoLineExpr(info_line);
+      .map((info_line): string => {
+        return info_line.accept(this);
       })
       .join("\n");
   }
   visitMultiMeasureRestExpr(expr: MultiMeasureRest) {
     return `${expr.rest.lexeme}${expr.length ? expr.length.lexeme : ""}`; // TODO do I need the bar lines?
   }
-  visitMusicCodeExpr(expr: Music_code) {
+  visitMusicCodeExpr(expr: Music_code): string {
     return expr.contents
       .map((content) => {
         if (content instanceof Token) {
           return content.lexeme;
-        } else if (content instanceof YSPACER) {
-          return this.visitYSpacerExpr(content);
-        } else if (content instanceof BarLine) {
-          return this.visitBarLineExpr(content);
-        } else if (content instanceof Annotation) {
-          return this.visitAnnotationExpr(content);
-        } else if (content instanceof Decoration) {
-          return this.visitDecorationExpr(content);
-        } else if (content instanceof Note) {
-          return this.visitNoteExpr(content);
-        } else if (content instanceof Grace_group) {
-          return this.visitGraceGroupExpr(content);
-        } else if (content instanceof Nth_repeat) {
-          return this.visitNthRepeatExpr(content);
-        } else if (content instanceof Inline_field) {
-          return this.visitInlineFieldExpr(content);
-        } else if (content instanceof Chord) {
-          return this.visitChordExpr(content);
-        } else if (content instanceof Symbol) {
-          return this.visitSymbolExpr(content);
-        } else if (content instanceof MultiMeasureRest) {
-          return this.visitMultiMeasureRestExpr(content);
         } else {
-          return this.visitSlurGroupExpr(content);
+          return content.accept(this);
         }
       })
       .join("");
   }
   visitNoteExpr(expr: Note) {
     let formattedNote = "";
-
-    if (expr.pitch instanceof Pitch) {
-      formattedNote += this.visitPitchExpr(expr.pitch);
-    } else {
-      formattedNote += this.visitRestExpr(expr.pitch);
-    }
+    formattedNote += expr.pitch.accept(this);
     if (expr.rhythm) {
-      formattedNote += this.visitRhythmExpr(expr.rhythm);
+      formattedNote += expr.rhythm.accept(this);
     }
     if (expr.tie) {
       formattedNote += "-";
@@ -194,30 +165,8 @@ export class AbcFormatter implements Visitor<string> {
       .map((content) => {
         if (content instanceof Token) {
           return content.lexeme;
-        } else if (content instanceof YSPACER) {
-          return this.visitYSpacerExpr(content);
-        } else if (content instanceof BarLine) {
-          return this.visitBarLineExpr(content);
-        } else if (content instanceof Annotation) {
-          return this.visitAnnotationExpr(content);
-        } else if (content instanceof Decoration) {
-          return this.visitDecorationExpr(content);
-        } else if (content instanceof Note) {
-          return this.visitNoteExpr(content);
-        } else if (content instanceof Grace_group) {
-          return this.visitGraceGroupExpr(content);
-        } else if (content instanceof Nth_repeat) {
-          return this.visitNthRepeatExpr(content);
-        } else if (content instanceof Inline_field) {
-          return this.visitInlineFieldExpr(content);
-        } else if (content instanceof Chord) {
-          return this.visitChordExpr(content);
-        } else if (content instanceof Symbol) {
-          return this.visitSymbolExpr(content);
-        } else if (content instanceof MultiMeasureRest) {
-          return this.visitMultiMeasureRestExpr(content);
         } else {
-          return this.visitSlurGroupExpr(content);
+          return content.accept(this);
         }
       })
       .join("");
@@ -226,54 +175,28 @@ export class AbcFormatter implements Visitor<string> {
   visitSymbolExpr(expr: Symbol) {
     return `!${expr.symbol.lexeme}!`;
   }
-  visitTuneBodyExpr(expr: Tune_Body) {
+  visitTuneBodyExpr(expr: Tune_Body): string {
     return expr.sequence
       .map((content) => {
         if (content instanceof Token) {
           return content.lexeme;
-        } else if (content instanceof YSPACER) {
-          return this.visitYSpacerExpr(content);
-        } else if (content instanceof BarLine) {
-          return this.visitBarLineExpr(content);
-        } else if (content instanceof Annotation) {
-          return this.visitAnnotationExpr(content);
-        } else if (content instanceof Decoration) {
-          return this.visitDecorationExpr(content);
-        } else if (content instanceof Note) {
-          return this.visitNoteExpr(content);
-        } else if (content instanceof Grace_group) {
-          return this.visitGraceGroupExpr(content);
-        } else if (content instanceof Nth_repeat) {
-          return this.visitNthRepeatExpr(content);
-        } else if (content instanceof Inline_field) {
-          return this.visitInlineFieldExpr(content);
-        } else if (content instanceof Chord) {
-          return this.visitChordExpr(content);
-        } else if (content instanceof Symbol) {
-          return this.visitSymbolExpr(content);
-        } else if (content instanceof MultiMeasureRest) {
-          return this.visitMultiMeasureRestExpr(content);
-        } else if (content instanceof Comment) {
-          return this.visitCommentExpr(content);
-        } else if (content instanceof Info_line) {
-          return this.visitInfoLineExpr(content);
         } else {
-          return this.visitSlurGroupExpr(content);
+          return content.accept(this);
         }
       })
       .join("");
   }
   visitTuneExpr(expr: Tune) {
     let formatted = "";
-    formatted += this.visitTuneHeaderExpr(expr.tune_header);
+    formatted += expr.tune_header.accept(this);
     if (expr.tune_body) {
-      formatted += this.visitTuneBodyExpr(expr.tune_body);
+      formatted += expr.tune_body.accept(this);
     }
     return formatted;
   }
   visitTuneHeaderExpr(expr: Tune_header) {
     return expr.info_lines
-      .map((infoLine) => this.visitInfoLineExpr(infoLine))
+      .map((infoLine): string => infoLine.accept(this))
       .join("");
   }
   visitYSpacerExpr(expr: YSPACER) {

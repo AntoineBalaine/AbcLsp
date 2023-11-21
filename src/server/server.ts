@@ -12,6 +12,7 @@ import {
 } from "vscode-languageserver/node";
 
 import { TextDocument } from "vscode-languageserver-textdocument";
+import { AbcTransformParams } from "../extensionCommands";
 import { AbcLspServer, vscode_standardTokenScopes } from "./AbcLspServer";
 
 // Create a connection for the server, using Node's IPC as a transport.
@@ -88,7 +89,7 @@ connection.onInitialize((params: InitializeParams) => {
 
   return result;
 });
-connection.onInitialized(() => {});
+connection.onInitialized(() => { });
 connection.languages.semanticTokens.on((params) => {
   return abcServer.onSemanticTokens(params.textDocument.uri);
 });
@@ -96,5 +97,10 @@ connection.languages.semanticTokens.on((params) => {
 connection.onDocumentFormatting((params) =>
   abcServer.onFormat(params.textDocument.uri)
 );
+
+connection.onRequest("divideRhythm", (params: AbcTransformParams) => {
+  return abcServer.onRhythmTransform(params.uri, "/", params.selection);
+});
+
 documents.listen(connection);
 connection.listen();

@@ -10,6 +10,7 @@ import {
   ServerOptions,
   TransportKind,
 } from "vscode-languageclient/node";
+import { registerCommands } from "./extensionCommands";
 
 let client: LanguageClient;
 
@@ -47,6 +48,9 @@ export function activate(context: ExtensionContext) {
     serverOptions,
     clientOptions
   );
+
+  // register list of extension's commands
+  registerCommands(context, client);
 
   // Start the client. This will also launch the server
   client.start();

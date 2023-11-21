@@ -1,3 +1,4 @@
+import { Selection } from "vscode";
 import {
   HandlerResult,
   Position,
@@ -10,6 +11,7 @@ import {
 } from "vscode-languageserver";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { AbcFormatter } from "../Parser/Visitors/Formatter";
+import { RhythmVisitor } from "../Parser/Visitors/RhythmTransform";
 import { TokenType } from "../Parser/types";
 import { AbcDocument } from "./AbcDocument";
 
@@ -84,6 +86,21 @@ export class AbcLspServer {
         Position.create(Number.MAX_VALUE, Number.MAX_VALUE) // TODO is this really reasonable?
       ),
       formatted
+    );
+    return [edit];
+  }
+
+  onRhythmTransform(uri: string, type: "*" | "/", range: Selection): HandlerResult<TextEdit[], void> {
+    const abcDocument = this.abcDocuments.get(uri); // find doc in previously parsed docs
+    if (!abcDocument || !abcDocument.tokens) {
+      return [];
+    }
+    const visitor = new RhythmVisitor(abcDocument.AST!);
+    visitor.transform(type, range);
+
+    const edit = TextEdit.replace(
+      range,
+      visitor.getChanges()
     );
     return [edit];
   }

@@ -1,8 +1,8 @@
 import { error } from "./error";
-import Token from "./token";
+import { Token } from "./token";
 import { TokenType } from "./types";
 
-export default class Scanner {
+export class Scanner {
   private source: string;
   private tokens: Array<Token> = new Array();
   private start = 0;
@@ -79,6 +79,9 @@ export default class Scanner {
       case "^":
         this.addToken(this.match("^") ? TokenType.SHARP_DBL : TokenType.SHARP);
         break;
+      /**
+       * TODO implement backticks in beams
+       */
       case ":": {
         const pkd = this.peek();
         if ((pkd === "|" || pkd === ":") && !this.isAtEnd()) {

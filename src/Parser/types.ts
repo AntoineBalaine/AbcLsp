@@ -50,3 +50,30 @@ export enum TokenType {
    */
   WHITESPACE,
 }
+
+/**
+ * these are ripped off vscode's typescript definitions
+ */
+export type Position = {
+  /**
+   * The zero-based line value.
+   */
+  line: number;
+  /**
+   * The zero-based character value.
+   */
+  character: number;
+};
+
+export type Range = {
+
+  /**
+   * The start position. It is before or equal to [end](#Range.end).
+   */
+  start: Position;
+
+  /**
+   * The end position. It is after or equal to [start](#Range.start).
+   */
+  end: Position;
+};

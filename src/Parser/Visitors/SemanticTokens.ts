@@ -1,6 +1,7 @@
 import {
   Annotation,
   BarLine,
+  Beam,
   Chord,
   Comment,
   Decoration,
@@ -17,7 +18,6 @@ import {
   Pitch,
   Rest,
   Rhythm,
-  Slur_group,
   Symbol,
   Tune,
   Tune_Body,
@@ -26,13 +26,15 @@ import {
   YSPACER,
   music_code,
 } from "../Expr";
-import Token from "../token";
+import { isToken, mergeTokens } from "../helpers";
+import { Token } from "../token";
 
 export class TokensVisitor implements Visitor<void> {
   public tokens: Array<Token> = [];
 
   analyze(file_structure: File_structure) {
     file_structure.accept(this);
+    return this;
   }
 
   visitFileStructureExpr(file_structure: File_structure): void {
@@ -42,7 +44,7 @@ export class TokensVisitor implements Visitor<void> {
     }
     tune.forEach((tune) => {
       const { tune_header, tune_body } = tune;
-      if (!tune_body) {
+      if (!tune_body) { // TODO: don't return when missing body.
         return;
       }
       tune_header.accept(this);
@@ -59,16 +61,25 @@ export class TokensVisitor implements Visitor<void> {
   }
   visitTuneBodyExpr(tune_body: Tune_Body): void {
     tune_body?.sequence.forEach((tuneBody_element) => {
-      if (tuneBody_element instanceof Token) {
+      if (isToken(tuneBody_element)) {
         this.tokens.push(tuneBody_element);
       } else {
         tuneBody_element.accept(this);
       }
     });
   }
+  visitBeamExpr(expr: Beam): void {
+    expr.contents.forEach((content) => {
+      if (isToken(content)) {
+        this.tokens.push(content);
+      } else {
+        content.accept(this);
+      }
+    });
+  }
   visitMusicCodeExpr(element: Music_code) {
     element.contents.forEach((content: music_code) => {
-      if (content instanceof Token) {
+      if (isToken(content)) {
         this.tokens.push(content);
       } else {
         content.accept(this);
@@ -112,15 +123,6 @@ export class TokensVisitor implements Visitor<void> {
       this.tokens.push(pitch.octave);
     }
   }
-  visitSlurGroupExpr(expr: Slur_group) {
-    expr.contents.forEach((e) => {
-      if (e instanceof Token) {
-        this.tokens.push(e);
-      } else {
-        e.accept(this);
-      }
-    });
-  }
   visitInfoLineExpr(element: Info_line) {
     const { key, value } = element;
     this.tokens.push(key);
@@ -131,7 +133,7 @@ export class TokensVisitor implements Visitor<void> {
   }
   visitChordExpr(e: Chord) {
     e.contents.forEach((content) => {
-      if (content instanceof Token) {
+      if (isToken(content)) {
         this.tokens.push(content);
       } else {
         content.accept(this);
@@ -188,18 +190,3 @@ export class TokensVisitor implements Visitor<void> {
 /**
  * TODO double check this
  */
-export const mergeTokens = (tokens: Array<Token>) => {
-  return tokens
-    .map((t) => cloneToken(t))
-    .reduce((prev, cur, index) => {
-      if (index === 0) {
-        return prev;
-      }
-      prev.lexeme = prev.lexeme + cur.lexeme;
-      return prev;
-    });
-};
-
-export const cloneToken = (token: Token) => {
-  return new Token(token.type, token.lexeme, null, token.line, token.position);
-};

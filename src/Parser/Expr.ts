@@ -1,4 +1,4 @@
-import Token from "./token";
+import { Token } from "./token";
 import { TokenType } from "./types";
 
 export interface Visitor<R> {
@@ -20,12 +20,12 @@ export interface Visitor<R> {
   visitPitchExpr(expr: Pitch): R;
   visitRestExpr(expr: Rest): R;
   visitRhythmExpr(expr: Rhythm): R;
-  visitSlurGroupExpr(expr: Slur_group): R;
   visitSymbolExpr(expr: Symbol): R;
   visitTuneBodyExpr(expr: Tune_Body): R;
   visitTuneExpr(expr: Tune): R;
   visitTuneHeaderExpr(expr: Tune_header): R;
   visitYSpacerExpr(expr: YSPACER): R;
+  visitBeamExpr(expr: Beam): R;
 }
 
 export abstract class Expr {
@@ -150,7 +150,7 @@ export class Comment extends Expr {
     return visitor.visitCommentExpr(this);
   }
 }
-export type tune_body_code = Comment | Info_line | music_code;
+export type tune_body_code = Comment | Info_line | music_code | Music_code;
 
 export class Tune extends Expr {
   tune_header: Tune_header;
@@ -328,7 +328,7 @@ export type music_code =
   | Chord
   | Symbol
   | MultiMeasureRest
-  | Slur_group;
+  | Beam;
 
 export class Music_code extends Expr {
   contents: Array<music_code>;
@@ -341,14 +341,25 @@ export class Music_code extends Expr {
   }
 }
 
-export class Slur_group extends Expr {
-  contents: Array<music_code>;
-  constructor(contents: Array<music_code>) {
+
+export type Beam_contents =
+  | Token
+  | YSPACER
+  | Annotation
+  | Decoration
+  | Note
+  | Grace_group
+  | Chord
+  | Symbol;
+
+export class Beam extends Expr {
+  contents: Array<Beam_contents>;
+  constructor(contents: Array<Beam_contents>) {
     super();
     this.contents = contents;
   }
   accept<R>(visitor: Visitor<R>): R {
-    return visitor.visitSlurGroupExpr(this);
+    return visitor.visitBeamExpr(this);
   }
 }
 export class Decoration extends Expr {

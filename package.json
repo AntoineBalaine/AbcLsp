@@ -18,6 +18,10 @@
       {
         "command": "abc.divideRhythm",
         "title": "Divide Rhythms"
+      },
+      {
+        "command": "abc.multiplyRhythm",
+        "title": "Multiply Rhythms"
       }
     ],
     "configurationDefaults": {

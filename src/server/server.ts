@@ -100,6 +100,9 @@ connection.onDocumentFormatting((params) =>
 connection.onRequest("divideRhythm", (params: AbcTransformParams) => {
   return abcServer.onRhythmTransform(params.uri, "/", params.selection);
 });
+connection.onRequest("multiplyRhythm", (params: AbcTransformParams) => {
+  return abcServer.onRhythmTransform(params.uri, "*", params.selection);
+});
 
 documents.listen(connection);
 connection.listen();

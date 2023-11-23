@@ -13,7 +13,8 @@ import {
 
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { AbcTransformParams } from "../extensionCommands";
-import { AbcLspServer, vscode_standardTokenScopes } from "./AbcLspServer";
+import { AbcLspServer } from "./AbcLspServer";
+import { vscode_standardTokenScopes } from "./server_helpers";
 
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.

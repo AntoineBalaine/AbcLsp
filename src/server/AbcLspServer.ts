@@ -77,7 +77,7 @@ export class AbcLspServer {
     const edit = TextEdit.replace(
       Range.create(
         Position.create(0, 0),
-        Position.create(Number.MAX_VALUE, Number.MAX_VALUE) // TODO is this really reasonable?
+        Position.create(Number.MAX_VALUE, Number.MAX_VALUE)
       ),
       formatted
     );

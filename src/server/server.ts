@@ -70,9 +70,7 @@ connection.onInitialize((params: InitializeParams) => {
         tokenTypes: Object.keys(vscode_standardTokenScopes).filter((val) =>
           Number.isNaN(parseInt(val, 10))
         ),
-        /*         Object.keys(TokenType).filter((val) =>
-          Number.isNaN(parseInt(val, 10))
-        ), */
+
         tokenModifiers: [],
       },
       range: false,

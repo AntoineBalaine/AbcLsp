@@ -5,6 +5,12 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
+  jzz:
+    specifier: ^1.7.4
+    version: 1.7.4
+  jzz-midi-smf:
+    specifier: ^1.8.1
+    version: 1.8.1
   vscode:
     specifier: ^1.1.37
     version: 1.1.37
@@ -179,6 +185,10 @@ packages:
   /@types/vscode@1.84.1:
     resolution: {integrity: sha512-DB10vBRLEPA/us7p3gQilU2Tq5HDu6JWTyCpD9qtb7MKWIvJS5In9HU3YgVGCXf/miwHJiY62aXwjtUSMpT8HA==}
     dev: true
+
+  /@types/webmidi@2.0.10:
+    resolution: {integrity: sha512-4RmTFMB6mN2h8XbJa1x3cOs9IOkXvFyHGcPUpUvWfmATuKg/J+dsFiMVgCE2EkpS+/8a8AP2tE3rQT1mLG7vEg==}
+    dev: false
 
   /@typescript-eslint/eslint-plugin@6.11.0(@typescript-eslint/parser@6.11.0)(eslint@8.53.0)(typescript@5.2.2):
     resolution: {integrity: sha512-uXnpZDc4VRjY4iuypDBKzW1rz9T5YBBK0snMn8MaTSNd2kMlj50LnLBABELjJiOL5YHk7ZD8hbSpI9ubzqYI0w==}
@@ -1041,6 +1051,11 @@ packages:
       '@pkgjs/parseargs': 0.11.0
     dev: true
 
+  /jazz-midi@1.7.9:
+    resolution: {integrity: sha512-c8c4BBgwxdsIr1iVm53nadCrtH7BUlnX3V95ciK/gbvXN/ndE5+POskBalXgqlc/r9p2XUbdLTrgrC6fou5p9w==}
+    engines: {node: '>=10.0.0'}
+    dev: false
+
   /js-yaml@4.1.0:
     resolution: {integrity: sha512-wpxZs9NoxZaJESJGIZTyDEaYpl0FKSA+FB9aJiyemKhMwkxQg63h4T1KJgUGHpTqPDNRcmmYLugrRjJlBtWvRA==}
     hasBin: true
@@ -1068,6 +1083,19 @@ packages:
       readable-stream: 2.3.8
       setimmediate: 1.0.5
     dev: true
+
+  /jzz-midi-smf@1.8.1:
+    resolution: {integrity: sha512-Sg7/i6nh9wgpZQvy+peYqUWtTh2xEKUyxbTHP2W8je76v5nkiaZ8tRETw5r/bqFxQQDYW2xbUTwfW7aSgHgzzw==}
+    dependencies:
+      jzz: 1.7.4
+    dev: false
+
+  /jzz@1.7.4:
+    resolution: {integrity: sha512-Q66OuEauPKImGF/CibsWI/02IEHmoZpAbEq6OcPaz4sihJwmt0J+9gWywudcdD+19cfmekl2I9NsVqlde/Phww==}
+    dependencies:
+      '@types/webmidi': 2.0.10
+      jazz-midi: 1.7.9
+    dev: false
 
   /keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}

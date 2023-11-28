@@ -1,5 +1,6 @@
 import { ExtensionContext, Selection, TextEdit, commands, window } from "vscode";
 import { LanguageClient } from "vscode-languageclient/node";
+import { MIDIIn } from "./Midi/midi-in";
 
 export type AbcTransformParams = {
   selection: Selection;
@@ -34,6 +35,49 @@ function registerTransformCommands(context: ExtensionContext, client: LanguageCl
   });
 }
 
+// ===== ===== ===== MIDI INPUT ===== ===== =====
+const registerMidiInputs = (context: ExtensionContext, client: LanguageClient) => {
+  // start midi input
+  const startInputMidiCmd = commands.registerCommand(
+    "abc.startMIDIInput",
+    () => {
+      MIDIIn.startMIDIInput();
+    }
+  );
+  context.subscriptions.push(startInputMidiCmd);
+
+  // stop midi input
+  const stopInputMidiCmd = commands.registerCommand(
+    "abc.stopMIDIInput",
+    () => {
+      MIDIIn.stopMIDIInput();
+    }
+  );
+  context.subscriptions.push(stopInputMidiCmd);
+
+  // set midi input device
+  const setInputMidiDeviceCmd = commands.registerCommand(
+    "abc.setInputMIDIDevice",
+    () => {
+      MIDIIn.setInputMIDIDevice();
+    }
+  );
+  context.subscriptions.push(setInputMidiDeviceCmd);
+
+  // restart midi input
+  const restartMIDIInputCmd = commands.registerCommand(
+    "abc.restartMIDIInput",
+    () => {
+      MIDIIn.restartMIDIInput();
+    }
+  );
+  context.subscriptions.push(restartMIDIInputCmd);
+
+  // status bar items for MIDI playback
+  MIDIIn.initMIDIStatusBarItems();
+};
+
 export function registerCommands(context: ExtensionContext, client: LanguageClient) {
   registerTransformCommands(context, client);
+  registerMidiInputs(context, client);
 }

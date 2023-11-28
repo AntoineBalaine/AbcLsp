@@ -22,6 +22,7 @@ import {
   Tune,
   Tune_Body,
   Tune_header,
+  Tuplet,
   Visitor,
   Voice_overlay,
   YSPACER,
@@ -61,12 +62,14 @@ export class TokensVisitor implements Visitor<void> {
     });
   }
   visitTuneBodyExpr(tune_body: Tune_Body): void {
-    tune_body?.sequence.forEach((tuneBody_element) => {
-      if (isToken(tuneBody_element)) {
-        this.tokens.push(tuneBody_element);
-      } else {
-        tuneBody_element.accept(this);
-      }
+    tune_body?.sequence.forEach((system) => {
+      system.forEach((element) => {
+        if (isToken(element)) {
+          this.tokens.push(element);
+        } else {
+          element.accept(this);
+        }
+      });
     });
   }
   visitBeamExpr(expr: Beam): void {
@@ -190,6 +193,13 @@ export class TokensVisitor implements Visitor<void> {
   visitYSpacerExpr(e: YSPACER) {
     this.tokens.push(e.ySpacer);
     e.number && this.tokens.push(e.number);
+  }
+
+  visitTupletExpr(expr: Tuplet) {
+    let { p, q, r } = expr;
+    return [p, q, r]
+      .filter((e): e is Token => !!e)
+      .forEach((e) => { this.tokens.push(e); });
   }
 }
 

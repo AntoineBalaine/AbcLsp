@@ -22,6 +22,7 @@ import {
   Tune,
   Tune_Body,
   Tune_header,
+  Tuplet,
   Visitor,
   Voice_overlay,
   YSPACER
@@ -145,11 +146,13 @@ export class RangeVisitor implements Visitor<Range> {
   }
   visitTuneBodyExpr(expr: Tune_Body): Range {
     return expr.sequence.map((e) => {
-      if (isToken(e)) {
-        return getTokenRange(e);
-      } else {
-        return e.accept(this);
-      }
+      return e.map(expr => {
+        if (isToken(expr)) {
+          return getTokenRange(expr);
+        } else {
+          return expr.accept(this);
+        }
+      }).reduce(reduceRanges, <Range>{});
     }).reduce(reduceRanges, <Range>{});
   }
   visitTuneExpr(expr: Tune): Range {
@@ -181,4 +184,12 @@ export class RangeVisitor implements Visitor<Range> {
       }
     }).reduce(reduceRanges, <Range>{});
   }
+  visitTupletExpr(expr: Tuplet) {
+    let { p, q, r } = expr;
+    return [p, q, r]
+      .filter((e): e is Token => !!e)
+      .map(e => (getTokenRange(e)))
+      .reduce(reduceRanges, <Range>{});
+  }
+
 }

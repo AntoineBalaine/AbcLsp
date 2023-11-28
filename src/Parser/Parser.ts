@@ -23,12 +23,14 @@ import {
   Symbol,
   Tune,
   Tune_Body,
-  tune_body_code,
   Tune_header,
+  Tuplet,
   Voice_overlay,
-  YSPACER
+  YSPACER,
+  tune_body_code
 } from "./Expr";
-import { beamEnd, foundBeam, isChord, isNote } from "./helpers";
+import { VoiceParser } from "./Voices";
+import { beamEnd, foundBeam, hasRestAttributes, isChord, isDecorationToken, isMultiMesureRestToken, isNote, isNoteToken, isRestToken, isRhythmToken } from "./helpers";
 import { Token } from "./token";
 import { ParserErrorType, TokenType } from "./types";
 
@@ -37,6 +39,7 @@ export class Parser {
   private current = 0;
   private source = "";
   private errorReporter: AbcErrorReporter;
+  private AST: File_structure | null = null;
   constructor(tokens: Array<Token>, source?: string, errorReporter?: AbcErrorReporter) {
     this.tokens = tokens;
     if (source) {
@@ -54,12 +57,15 @@ export class Parser {
 
   parse() {
     try {
-      return this.file_structure();
+      const AST = this.file_structure();
+      this.AST = AST;
+      return AST;
     } catch (err: any) {
       console.error(err);
       return null;
     }
   }
+
 
   private file_structure() {
     let file_header: File_header | null = null;
@@ -116,16 +122,29 @@ export class Parser {
     ) {
       return new Tune(tune_header);
     } else {
-      const tune_body = this.tune_body();
+      const tune_body = this.tune_body(tune_header.voices);
       return new Tune(tune_header, tune_body);
     }
   }
 
   private tune_header() {
     const info_lines = [];
+    const voices = [];
     while (!this.isAtEnd()) {
       if (this.peek().type === TokenType.LETTER_COLON) {
-        info_lines.push(this.info_line());
+        /**
+         * read the info line: if it's a VOICE line (V: key)
+         * then stringify the tokens in the value, and add to the array of voice names.
+         */
+        const line = this.info_line();
+        if (line.key.lexeme === "V:") {
+          /**
+           * trim the space in the value line, and remove any trailing comments after the legend
+           */
+          const legend = line.value.map(token => token.lexeme).join("").trim().replace(/\s.*/, "");
+          voices.push(legend);
+        }
+        info_lines.push(line);
       } else if (this.peek().type === TokenType.COMMENT
         || this.peek().type === TokenType.STYLESHEET_DIRECTIVE
       ) {
@@ -143,7 +162,7 @@ export class Parser {
       }
     }
     this.advance();
-    return new Tune_header(info_lines);
+    return new Tune_header(info_lines, voices);
   }
 
   private info_line() {
@@ -166,8 +185,9 @@ export class Parser {
     return new Info_line(info_line);
   }
 
-  private tune_body() {
+  private tune_body(voices?: string[]) {
     let elements: Array<tune_body_code> = [];
+
     while (!this.isAtEnd()) {
       //check for commentline
       // check for info line
@@ -176,7 +196,8 @@ export class Parser {
         if (this.peek().type === TokenType.COMMENT || this.peek().type === TokenType.STYLESHEET_DIRECTIVE) {
           elements.push(this.comment_line());
         } else if (this.peek().type === TokenType.LETTER_COLON) {
-          elements.push(this.info_line());
+          const info_line = this.info_line();
+          elements.push(info_line);
         } else if (
           !(
             this.peek().type === TokenType.EOL &&
@@ -192,8 +213,10 @@ export class Parser {
         this.synchronize();
       }
     }
+
     const elements_with_beams = this.beam(elements);
-    return new Tune_Body(elements_with_beams);
+    const systems = new VoiceParser(elements_with_beams, voices).parse();
+    return new Tune_Body(systems);
   }
 
   private music_content() {
@@ -211,6 +234,7 @@ export class Parser {
       | Symbol
       | MultiMeasureRest
       | Beam
+      | Tuplet
     > = [];
     const curTokn = this.peek();
 
@@ -308,9 +332,12 @@ export class Parser {
         this.advance();
         break;
       case TokenType.LEFTPAREN_NUMBER:
-      // TODO parse a tuplet
-      // which is a leftparen_number followed by
-      // a beam group
+        if (this.isTuplet()) {
+          contents.push(this.tuplet());
+        } else {
+          throw this.error(curTokn, "Tuplet markers should be followed by a note", ParserErrorType.TUNE_BODY);
+        }
+        break;
       case TokenType.SYMBOL:
         contents.push(this.symbol());
         break;
@@ -331,9 +358,9 @@ export class Parser {
         } else if (this.isDecoration()) {
           contents.push(new Decoration(curTokn));
           this.advance();
-        } else if (this.isMultiMesureRest()) {
+        } else if (isMultiMesureRestToken(this.peek())) {
           contents.push(this.multiMeasureRest());
-        } else if (this.isRest()) {
+        } else if (isRestToken(this.peek())) {
           contents.push(this.parse_note());
         } else {
           throw this.error(curTokn, "Unexpected token after letter", ParserErrorType.TUNE_BODY);
@@ -348,6 +375,45 @@ export class Parser {
   voice_overlay(ampersands: Token[]): Voice_overlay {
     return new Voice_overlay(ampersands);
   }
+  tuplet() {
+    // implement more strictly the possible contents of the tuplet
+    // which is a leftparen_number followed by
+    /**
+     * find end of expression
+     * (leftparen_number, :[0-9], :[0-9]
+     * opt WS
+     * NOTE
+     *
+COLON NUMBER (opt *2)
+COLON_DBL NUMBER
+     */
+    let p: Token;
+    let q: Token | undefined = undefined;
+    let r: Token | undefined = undefined;
+    // find if followed by note
+    p = this.peek();
+    this.advance();
+    /**
+     * TODO rewrite using this.match()
+     */
+    if (this.peek().type === TokenType.COLON_DBL) {
+      q = new Token(TokenType.COLON, ":", null, p.line, this.peek().position);
+      r = new Token(TokenType.COLON, ":", null, p.line, this.peek().position + 1);
+      this.advance();
+    } else {
+      /** either it will be a COLON_NUMBER once or TWICE */
+      if (this.peek().type === TokenType.COLON_NUMBER) {
+        q = this.peek();
+        this.advance();
+      }
+      /**second time */
+      if (this.peek().type === TokenType.COLON_NUMBER) {
+        q = this.peek();
+        this.advance();
+      }
+    }
+    return new Tuplet(p, q, r);
+  }
   /**
    * iterate the music code
    * 
@@ -359,6 +425,9 @@ export class Parser {
     let beam: Array<Beam_contents> = [];
 
     for (let i = 0; i < music_code.length; i++) {
+      /**
+       * TODO rewrite using this.match()
+       */
       if (foundBeam(music_code, i)) {
         while (!beamEnd(music_code, i) && i < music_code.length) {
           beam.push(music_code[i] as Beam_contents);
@@ -449,19 +518,60 @@ export class Parser {
     const type = this.peek().type;
     const nxtType = this.peekNext();
     if (
-      (type === TokenType.DOT ||
-        type === TokenType.TILDE ||
-        (type === TokenType.LETTER && /[HLMOPSTuv]/.test(lexeme))) &&
-      (nxtType.type === TokenType.FLAT ||
-        nxtType.type === TokenType.FLAT_DBL ||
-        nxtType.type === TokenType.NATURAL ||
-        nxtType.type === TokenType.NOTE_LETTER ||
-        nxtType.type === TokenType.SHARP ||
-        nxtType.type === TokenType.SHARP_DBL ||
-        this.hasRestAttributes(nxtType) ||
-        this.peekNext().type === TokenType.NOTE_LETTER)
+      isDecorationToken(pkd) &&
+      (isNoteToken(nxtType) ||
+        hasRestAttributes(nxtType))
     ) {
       return true;
+    } else if (
+      type === TokenType.DOT ||
+      type === TokenType.TILDE ||
+      (type === TokenType.LETTER && /[HLMOPSTuv]/.test(lexeme))
+    ) {
+      let i = this.current;
+      while (i < this.tokens.length) {
+        i++;
+        const cur = this.tokens[i];
+        if (!isDecorationToken(cur)
+          && !isNoteToken(cur)
+          && !hasRestAttributes(cur)) {
+          return false;
+        } else if (isNoteToken(cur)) {
+          return true;
+        }
+      }
+      return false;
+    }
+    else {
+      return false;
+    }
+  }
+  private isTuplet() {
+    /**
+     * start at next token
+     * if is anything other than a note token, a decoration, or a ws,
+     * or <annotations> or <decorations>
+     * or colondouble followed by number
+    */
+    let i = this.current + 1;
+    while (i < this.tokens.length) {
+      i++;
+      const cur = this.tokens[i];
+
+      /**
+       * TODO rewrite using this.match()
+       */
+      if (!isDecorationToken(cur)
+        && !isNoteToken(cur)
+        && (cur.type !== TokenType.STRING && cur.lexeme !== "\"")
+        && cur.type !== TokenType.WHITESPACE
+        && cur.type !== TokenType.COLON_DBL
+        && cur.type !== TokenType.NUMBER
+      ) {
+        return false;
+      } else if (isNoteToken(cur)) {
+        return true;
+      }
     }
     return false;
   }
@@ -490,7 +600,7 @@ export class Parser {
     //consume the right bracket
     this.consume(this.peek().type, "Expected a right bracket");
     // optionally parse a rhythm
-    if (this.isRhythm()) {
+    if (isRhythmToken(this.peek())) {
       chordRhythm = this.rhythm();
     }
     return new Chord(chordContents, chordRhythm);
@@ -555,13 +665,13 @@ export class Parser {
       note = { pitchOrRest: this.pitch() };
     } else if (this.peek().type === TokenType.NOTE_LETTER) {
       note = { pitchOrRest: this.pitch() };
-    } else if (this.isRest()) {
+    } else if (isRestToken(this.peek())) {
       note = { pitchOrRest: this.rest() };
     } else {
       throw this.error(this.peek(), "Unexpected token in note", ParserErrorType.TUNE_BODY);
     }
 
-    if (!this.isAtEnd() && this.isRhythm()) {
+    if (!this.isAtEnd() && isRhythmToken(this.peek())) {
       note.rhythm = this.rhythm();
     }
     if (!this.isAtEnd() && this.peek().type === TokenType.MINUS) {
@@ -574,7 +684,7 @@ export class Parser {
   private rest() {
     let rest: Token;
 
-    if (this.isRest()) {
+    if (isRestToken(this.peek())) {
       rest = this.peek();
       this.advance();
     } else {
@@ -586,7 +696,7 @@ export class Parser {
   private multiMeasureRest() {
     let rest: Token;
     let length: Token;
-    if (this.isMultiMesureRest()) {
+    if (isMultiMesureRestToken(this.peek())) {
       rest = this.peek();
       this.advance();
     } else {
@@ -789,32 +899,4 @@ export class Parser {
   private previous(): Token {
     return this.tokens[this.current - 1];
   }
-
-  private isRhythm = () => {
-    const pkd = this.peek();
-    return (
-      pkd.type === TokenType.SLASH ||
-      pkd.type === TokenType.NUMBER ||
-      pkd.type === TokenType.GREATER ||
-      pkd.type === TokenType.LESS
-    );
-  };
-
-  private isMultiMesureRest = () => {
-    const pkd = this.peek();
-    return (
-      pkd.type === TokenType.LETTER &&
-      (pkd.lexeme === "Z" || pkd.lexeme === "X")
-    );
-  };
-  private isRest = () => {
-    const pkd = this.peek();
-    return this.hasRestAttributes(pkd);
-  };
-  private hasRestAttributes = (token: Token) => {
-    return (
-      token.type === TokenType.LETTER &&
-      (token.lexeme === "z" || token.lexeme === "x")
-    );
-  };
 }

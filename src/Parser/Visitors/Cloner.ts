@@ -24,14 +24,15 @@ import {
   Tune,
   Tune_Body,
   Tune_header,
+  Tuplet,
   Visitor,
   Voice_overlay,
   YSPACER,
-  music_code,
-  tune_body_code,
+  music_code
 } from "../Expr";
 import { cloneText, cloneToken, isToken } from "../helpers";
 import { Token } from "../token";
+import { System } from "../types";
 export class Cloner implements Visitor<Expr | Token> {
 
   visitAnnotationExpr(expr: Annotation): Annotation {
@@ -135,8 +136,14 @@ export class Cloner implements Visitor<Expr | Token> {
   }
   visitSymbolExpr(expr: Symbol): Symbol { return new Symbol(cloneToken(expr.symbol)); }
   visitTuneBodyExpr(expr: Tune_Body): Tune_Body {
-    let newSequence: Array<tune_body_code | Token> = expr.sequence.map((e) => {
-      return isToken(e) ? cloneToken(e) : e.accept(this) as tune_body_code;
+    let newSequence = expr.sequence.map((e) => {
+      return e.map(exp => {
+        if (isToken(exp)) {
+          return cloneToken(exp);
+        } else {
+          return exp.accept(this);
+        }
+      }) as System;
     });
     return new Tune_Body(newSequence);
   }
@@ -168,5 +175,17 @@ export class Cloner implements Visitor<Expr | Token> {
       }
     });
     return new Beam(newContents);
+  }
+  visitTupletExpr(expr: Tuplet): Tuplet {
+    let p = cloneToken(expr.p);
+    let q: Token | undefined;
+    let r: Token | undefined;
+    if (expr.q) {
+      let q = cloneToken(expr.q);
+    }
+    if (expr.r) {
+      let r = cloneToken(expr.r);
+    }
+    return new Tuplet(p, q, r);
   }
 }

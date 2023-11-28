@@ -21,7 +21,8 @@ import {
   Tune_Body,
   Voice_overlay,
   YSPACER,
-  music_code
+  music_code,
+  tune_body_code
 } from './Expr';
 import { Token } from './token';
 import { Range, TokenType } from './types';
@@ -93,6 +94,9 @@ export function isTune_Body(expr: Expr): expr is Tune_Body {
 }
 export function isVoice_overlay(expr: unknown): expr is Voice_overlay {
   return expr instanceof Voice_overlay;
+}
+export function isDecoration(expr: unknown): expr is Decoration {
+  return expr instanceof Decoration;
 }
 
 export const mergeTokens = (tokens: Token[]) => {
@@ -238,6 +242,25 @@ export function isTokenInRange(range: Range, expr: Token): boolean {
   return range.start.line <= expr.line && range.end.line >= expr.line && range.start.character <= expr.position && range.end.character >= expr.position;
 }
 
+export function isDecorationToken(token: Token) {
+  const type = token.type;
+  const lexeme = token.lexeme;
+  return (
+    type === TokenType.DOT ||
+    type === TokenType.TILDE ||
+    (type === TokenType.LETTER && /[HLMOPSTuv]/.test(lexeme))
+  );
+}
+
+export function isNoteToken(token: Token) {
+  return (token.type === TokenType.FLAT ||
+    token.type === TokenType.FLAT_DBL ||
+    token.type === TokenType.NATURAL ||
+    token.type === TokenType.NOTE_LETTER ||
+    token.type === TokenType.SHARP ||
+    token.type === TokenType.SHARP_DBL);
+}
+
 function isBeamBreaker(cur: Token | Expr): boolean {
   if (isToken(cur)) {
     return isWS(cur);
@@ -328,3 +351,43 @@ export const isEmptyRhythm = (rhythm: Rhythm): boolean => {
   } = rhythm;
   return !numerator && !separator && !denominator && !broken;
 };
+
+
+export function hasRestAttributes(token: Token) {
+  return (
+    token.type === TokenType.LETTER &&
+    (token.lexeme === "z" || token.lexeme === "x")
+  );
+}
+export const isRhythmToken = (pkd: Token) => {
+  return (
+    pkd.type === TokenType.SLASH ||
+    pkd.type === TokenType.NUMBER ||
+    pkd.type === TokenType.GREATER ||
+    pkd.type === TokenType.LESS
+  );
+};
+
+export const isMultiMesureRestToken = (pkd: Token) => {
+  return (
+    pkd.type === TokenType.LETTER &&
+    (pkd.lexeme === "Z" || pkd.lexeme === "X")
+  );
+};
+export const isRestToken = (pkd: Token) => {
+  return hasRestAttributes(pkd);
+};
+
+export function isTupletToken(pkd: Token) {
+  return pkd.type === TokenType.LEFTPAREN_NUMBER || pkd.type === TokenType.COLON_DBL || pkd.type === TokenType.NUMBER;
+}
+
+export function isVoice(e: tune_body_code): e is Info_line | Inline_field {
+  if (isInfo_line(e) && e.key.lexeme === "V:") {
+    return true;
+  } else if (isInline_field(e) && e.field.lexeme === "V:") {
+    return true;
+  } else {
+    return false;
+  }
+}

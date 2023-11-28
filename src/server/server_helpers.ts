@@ -43,6 +43,7 @@ export function mapTokenTypeToStandardScope(type: number): number {
       return vscode_standardTokenScopes.variable;
     case TokenType.LETTER:
       return vscode_standardTokenScopes.string;
+    case TokenType.AMPERSAND: // &
     case TokenType.LETTER_COLON: //A:
     case TokenType.PLUS_COLON: //+: - extending info line
     case TokenType.ANTISLASH_EOL:

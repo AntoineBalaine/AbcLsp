@@ -29,7 +29,7 @@ import {
   YSPACER,
   music_code,
 } from "../Expr";
-import { isBarLine, isBeam, isComment, isDecoration, isInline_field, isMultiMeasureRest, isNote, isNthRepeat, isToken, isVoice_overlay, isWS } from "../helpers";
+import { isBarLine, isBeam, isComment, isInline_field, isMultiMeasureRest, isNote, isNthRepeat, isToken, isVoice_overlay } from "../helpers";
 import { Token } from "../token";
 import { System, TokenType } from "../types";
 import { Formatter_Bar, Formatter_LineWithBars, GroupBarsInLines, convertVoiceInfoLinesToInlineInfos, splitSystemLines } from './Formatter_helpers';
@@ -279,7 +279,9 @@ export class AbcFormatter implements Visitor<string> {
       else if (isVoice_overlay(expr)) { insertWS_FRMTR(); }
       else if (isToken(expr) && expr.type === TokenType.WHITESPACE_FORMATTER) { continue; }
       else { continue; }
-      /*       else if (isChord(expr)) { }
+      // Levaing the other cases here for now, in case they need to be revisited later
+      /*
+      else if (isChord(expr)) { }
       if (isAnnotation(expr)) { }
             else if (isComment(expr)) { }
             else if (isDecoration(expr)) { }
@@ -288,28 +290,8 @@ export class AbcFormatter implements Visitor<string> {
             // else if (isLyricSection(expr)){}
             else if (isSymbol(expr)) { }
             else if (isYSPACER(expr)) { }
-            else if (isToken(expr) && isTupletToken(expr)) { } */
-      /*       if (isToken(expr)) {
-              if (expr.type === TokenType.WHITESPACE) {
-      
-              } else if (expr.type === TokenType.WHITESPACE_FORMATTER) {
-              } else if (!isWS(expr)) {
-                if (expr.type === TokenType.LEFTPAREN) {
-                } else {
-                }
-              } else {
-              }
-            } else {
-              const fmt = expr.accept(this);
-              const nextExpr = system[idx + 1];
-      
-              if (
-                isToken(nextExpr) &&
-                (nextExpr.type === TokenType.EOL
-                  || nextExpr.type === TokenType.EOF
-                  || nextExpr.type === TokenType.ANTISLASH_EOL)) {
-              }
-            } */
+            else if (isToken(expr) && isTupletToken(expr)) { }
+      */
     }
     return system;
   }
@@ -332,52 +314,6 @@ export class AbcFormatter implements Visitor<string> {
        * if we're just printing as is, return the lexeme of the token
        */
       return isToken(expr) ? expr.lexeme : expr.accept(this);
-    }).join("");
-    return fmtLines.map((expr, idx, arr) => {
-      /**
-       * if we're just printing as is, return the lexeme of the token
-       */
-      if (this.no_format) {
-        return isToken(expr) ? expr.lexeme : expr.accept(this);
-      }
-      if (isToken(expr)) {
-        if (expr.type === TokenType.WHITESPACE) {
-          return "";
-
-        } else if (expr.type === TokenType.WHITESPACE_FORMATTER) {
-          if (idx === arr.length - 1) {
-            return "";
-          } else {
-            return " ";
-          }
-        } else if (!isWS(expr)) {
-          if (expr.type === TokenType.LEFTPAREN) {
-            return expr.lexeme;
-          } else {
-            return expr.lexeme + " ";
-          }
-        } else {
-          return expr.lexeme;
-        }
-      } else {
-        const fmt = expr.accept(this);
-        const nextExpr = arr[idx + 1];
-        if (((isBeam(expr) && isToken(nextExpr) && nextExpr.type === TokenType.RIGHT_PAREN) || isDecoration(expr))
-          /**
-           * TODO add this: for now this is causing issue in parsing:
-           * Last expr before EOL doesn't get correctly parsed if it's not a WS.
-           *  || (onlyWSTillEnd(idx + 1, arr)) */) {
-          return fmt;
-        } else if (
-          isToken(nextExpr) &&
-          (nextExpr.type === TokenType.EOL
-            || nextExpr.type === TokenType.EOF
-            || nextExpr.type === TokenType.ANTISLASH_EOL)) {
-          return fmt;
-        } else {
-          return fmt + " ";
-        }
-      }
     }).join("");
 
   }

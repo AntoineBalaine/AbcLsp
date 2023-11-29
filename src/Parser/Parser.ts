@@ -30,7 +30,7 @@ import {
   tune_body_code
 } from "./Expr";
 import { VoiceParser } from "./Voices";
-import { beamEnd, foundBeam, hasRestAttributes, isChord, isDecorationToken, isMultiMesureRestToken, isNote, isNoteToken, isRestToken, isRhythmToken } from "./helpers";
+import { beamEnd, foundBeam, hasRestAttributes, isChord, isDecorationToken, isMultiMesureRestToken, isNote, isNoteToken, isRestToken, isRhythmToken, isTupletToken } from "./helpers";
 import { Token } from "./token";
 import { ParserErrorType, TokenType } from "./types";
 
@@ -136,6 +136,10 @@ export class Parser {
          * read the info line: if it's a VOICE line (V: key)
          * then stringify the tokens in the value, and add to the array of voice names.
          */
+        //find whether this is the voices legend or the actual start of the tune_body.
+        if (this.peek().lexeme === "V:" && !this.isVoicesLegend() && !voices.length) {
+          return new Tune_header(info_lines, voices);
+        }
         const line = this.info_line();
         if (line.key.lexeme === "V:") {
           /**
@@ -546,6 +550,37 @@ COLON_DBL NUMBER
       return false;
     }
   }
+
+  /**
+   * parse all tokens entil EOL.
+   * Then, if the next line is a voice, return true
+   * 
+   * if it's a comment, skip it and continue 
+   * 
+   * if it's an info line, return true
+   * 
+   * else return false
+   * */
+  private isVoicesLegend() {
+    let i = this.current;
+    while (i < this.tokens.length && this.tokens[i].type !== TokenType.EOL) {
+      i++;
+    }
+    while (i < this.tokens.length) {
+      i++;
+      const cur = this.tokens[i];
+      if (cur.type === TokenType.COMMENT || cur.type === TokenType.STYLESHEET_DIRECTIVE) {
+        continue;
+      } else if (cur.type === TokenType.LETTER_COLON) {
+        return true;
+      } else if (cur.type === TokenType.EOF) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+    return false;
+  }
   private isTuplet() {
     /**
      * start at next token
@@ -553,7 +588,7 @@ COLON_DBL NUMBER
      * or <annotations> or <decorations>
      * or colondouble followed by number
     */
-    let i = this.current + 1;
+    let i = this.current;
     while (i < this.tokens.length) {
       i++;
       const cur = this.tokens[i];
@@ -563,6 +598,7 @@ COLON_DBL NUMBER
        */
       if (!isDecorationToken(cur)
         && !isNoteToken(cur)
+        && !isTupletToken(cur)
         && (cur.type !== TokenType.STRING && cur.lexeme !== "\"")
         && cur.type !== TokenType.WHITESPACE
         && cur.type !== TokenType.COLON_DBL

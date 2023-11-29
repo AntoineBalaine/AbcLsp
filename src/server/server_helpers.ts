@@ -27,8 +27,6 @@ export function mapTokenTypeToStandardScope(type: number): number {
       return vscode_standardTokenScopes.string;
     case TokenType.COLON: // :
       return vscode_standardTokenScopes.string;
-    case TokenType.COLON_DBL: // ::
-      return vscode_standardTokenScopes.string;
     case TokenType.APOSTROPHE: // octave
     case TokenType.COMMA: //,,,,,, octave
       return vscode_standardTokenScopes.string;
@@ -70,6 +68,8 @@ export function mapTokenTypeToStandardScope(type: number): number {
     case TokenType.SHARP: // ♯
     case TokenType.SHARP_DBL: // 𝄪
       return vscode_standardTokenScopes.string;
+    case TokenType.COLON_DBL: // (1 rhythm
+    case TokenType.COLON_NUMBER: // (1 rhythm
     case TokenType.LEFTPAREN_NUMBER: // (1 rhythm
       return vscode_standardTokenScopes.number;
     case TokenType.GREATER: //>>>>> rhythm

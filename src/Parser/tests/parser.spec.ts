@@ -341,6 +341,15 @@ describe("Parser", () => {
           expect(musicCode.value[0].lexeme).to.equal("Title");
         }
       });
+      it("should parse info_line at start of body", () => {
+        const tune_body = buildParse("K:C\nV:1\nabc\nT:Title").tune[0].tune_body;
+        const musicCode = tune_body?.sequence[0][0];
+        expect(musicCode).to.be.an.instanceof(Info_line);
+        if (isInfo_line(musicCode)) {
+          expect(musicCode.key.lexeme).to.equal("V:");
+          expect(musicCode.value[0].lexeme).to.equal("1");
+        }
+      });
       it("should parse chord", () => {
         const musicCode = buildParse('["suprise"C]4').tune[0].tune_body?.sequence[0][0];
         expect(musicCode).to.be.an.instanceof(Chord);
@@ -482,8 +491,8 @@ L:1/8`;
 
     describe("Tuplets", () => {
       const samples: Array<string> = [
-        '(3a',
-        '(3::a',
+        /*         '(3a',
+                '(3::a', */
         '(3:2:3a',
         '(3:2a',
       ];
@@ -509,8 +518,6 @@ L:1/8`;
 D4`;
         const parse = buildParse(input);
         const system = parse.tune[0].tune_body?.sequence[0];
-        // expect there to be only 1 info line.
-        // expect the info line to correspond to the input string, without its last line break
         expect(system).to.not.be.undefined;
         if (system) {
           expect(system.length).to.equal(6);

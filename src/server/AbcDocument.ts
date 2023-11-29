@@ -14,7 +14,7 @@ export class AbcDocument {
   public AST: File_structure | null = null;
   constructor(public document: TextDocument) { }
   analyze() {
-    const source = this.document.getText();
+    const source = String.raw`${this.document.getText()}`;
 
     this.diagnostics = [];
     this.tokens = [];

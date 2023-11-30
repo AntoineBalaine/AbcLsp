@@ -3,6 +3,9 @@ import { AbcError } from "../Parser/ErrorReporter";
 import { getTokenRange } from "../Parser/helpers";
 import { TokenType } from "../Parser/types";
 
+/**
+ * TODO refactor these two functions. The map containing warnings and errors all together should be coming from the error reporter.
+ */
 export function mapAbcErrorsToDiagnostics(abcErrors: Array<AbcError>): Array<Diagnostic> {
   return abcErrors.map((error): Diagnostic => {
     return {
@@ -13,6 +16,16 @@ export function mapAbcErrorsToDiagnostics(abcErrors: Array<AbcError>): Array<Dia
     };
   }
   );
+}
+export function mapAbcWarningsToDiagnostics(abcwarnings: Array<AbcError>): Array<Diagnostic> {
+  return abcwarnings.map((warning): Diagnostic => {
+    return {
+      severity: 2,
+      range: getTokenRange(warning.token),
+      message: warning.message,
+      source: "abc",
+    };
+  });
 }
 
 export function mapTokenTypeToStandardScope(type: number): number {
@@ -45,8 +58,13 @@ export function mapTokenTypeToStandardScope(type: number): number {
     case TokenType.LETTER_COLON: //A:
     case TokenType.PLUS_COLON: //+: - extending info line
     case TokenType.ANTISLASH_EOL:
+    case TokenType.ESCAPED_CHAR:
       return vscode_standardTokenScopes.keyword;
-    case TokenType.MINUS: //-
+    case TokenType.MINUS:
+    case TokenType.FLAT: // ♭
+    case TokenType.FLAT_DBL: // 𝄫
+    case TokenType.SHARP: // ♯
+    case TokenType.SHARP_DBL: // : //-
     case TokenType.NATURAL: // ♮
       return vscode_standardTokenScopes.decorator;
     case TokenType.NUMBER:
@@ -62,11 +80,6 @@ export function mapTokenTypeToStandardScope(type: number): number {
     case TokenType.RIGHT_BRACE: // }
     case TokenType.RIGHT_BRKT: // ]
     case TokenType.RIGHT_PAREN: // )
-      return vscode_standardTokenScopes.string;
-    case TokenType.FLAT: // ♭
-    case TokenType.FLAT_DBL: // 𝄫
-    case TokenType.SHARP: // ♯
-    case TokenType.SHARP_DBL: // 𝄪
       return vscode_standardTokenScopes.string;
     case TokenType.COLON_DBL: // (1 rhythm
     case TokenType.COLON_NUMBER: // (1 rhythm
@@ -118,3 +131,15 @@ export enum vscode_standardTokenScopes {
   variable
 }
 
+
+/*
+ *
+USED scopes: 
+comment
+decorator;
+keyword;
+number;
+regexp;
+string;
+variable
+*/

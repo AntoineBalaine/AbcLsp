@@ -6,7 +6,7 @@ import { Parser } from "../Parser/Parser";
 import { Scanner } from "../Parser/Scanner";
 import { TokensVisitor } from "../Parser/Visitors/SemanticTokens";
 import { Token } from "../Parser/token";
-import { mapAbcErrorsToDiagnostics } from "./server_helpers";
+import { mapAbcErrorsToDiagnostics, mapAbcWarningsToDiagnostics } from "./server_helpers";
 
 export class AbcDocument {
   public diagnostics: Diagnostic[] = [];
@@ -23,7 +23,9 @@ export class AbcDocument {
     const tokens = new Scanner(source, abcErrorReporter).scanTokens();
     const parser = new Parser(tokens, source, abcErrorReporter);
     this.AST = parser.parse();
-    this.diagnostics = mapAbcErrorsToDiagnostics(abcErrorReporter.getErrors());
+    let errs = mapAbcErrorsToDiagnostics(abcErrorReporter.getErrors());
+    let warnings = mapAbcWarningsToDiagnostics(abcErrorReporter.getWarnings());
+    this.diagnostics = errs.concat(warnings);
 
     if (!this.AST) {
       return;

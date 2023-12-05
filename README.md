@@ -3,11 +3,18 @@
 Language features for [ABC music notation](https://abcnotation.com/)
 
 ## Features
-
 - Syntax highlighting.
+
+![side by side view of syntax highlighting and score](assets/lsp_side_sm.jpg "Syntax Highlighting")
 - Diagnostics warning when the server can't read the score.
-- Formatting for single-voice, single-instrument scores.
+
+![diagnostics view of abc score](assets/lsp_diagnostic_sm.jpg "Abc diagnostics" )
+
+- Code formatter.
+
+![abc score formatting](./assets/lsp_format.gif "Abc score formatting" )
 - `Divide rhythms`, and `Multiply rhythms` commands: select some notes and the commands will divide/multiple their time value by two.
+- Single note midi input from you midi keyboard (Chord-input from midi will come at some point)
 
 ## Requirements
 
@@ -15,7 +22,6 @@ You might want to use this in conjunction with the [AbcJS](https://github.com/ab
 
 ## Known Issues
 
-- Doesn't support triplets/tuplets yet.
 - Doesn't support lyric sections yet.
 - Doesn't support ranges in repeat bars (`|1-2` or `|1,2`).
 - Doesn't allow rhythms in grace note groups.
@@ -23,8 +29,8 @@ You might want to use this in conjunction with the [AbcJS](https://github.com/ab
 
 ## Maybe coming to the extension
 
-- Multi-voice and multi-instrument formatting.
-- Triplets and tuplets.
+- Arranging routine capabilities
+- Live preview of the score
 
 ## Release Notes
 

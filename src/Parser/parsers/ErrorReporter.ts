@@ -1,5 +1,5 @@
-import { Token } from "./token";
-import { ParserErrorType, TokenType } from "./types";
+import { Token } from "../types/token";
+import { ParserErrorType, TokenType } from "../types/types";
 
 export type AbcError = { line: number, where: string, message: string, token: Token, origin?: { type: ParserErrorType } };
 
@@ -21,9 +21,9 @@ export class AbcErrorReporter {
   hasErrors = () => this.errors.length > 0;
   resetErrors = () => (this.errors = []);
   getErrors = () => this.errors;
-  hasWarnings = () => this.errors.length > 0;
-  resetWarnings = () => (this.errors = []);
-  getWarnings = () => this.errors;
+  hasWarnings = () => this.warnings.length > 0;
+  resetWarnings = () => (this.warnings = []);
+  getWarnings = () => this.warnings;
 
 
   ScannerError = (line: number, message: string, token: Token) => {

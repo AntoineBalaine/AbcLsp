@@ -3,9 +3,12 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 import {
+  CompletionItem,
+  CompletionItemKind,
   InitializeParams,
   InitializeResult,
   ProposedFeatures,
+  TextDocumentPositionParams,
   TextDocumentSyncKind,
   TextDocuments,
   createConnection,
@@ -14,6 +17,7 @@ import {
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { AbcTransformParams } from "../extensionCommands";
 import { AbcLspServer } from "./AbcLspServer";
+import { DECORATION_SYMBOLS } from "./completions";
 import { vscode_standardTokenScopes } from "./server_helpers";
 
 // Create a connection for the server, using Node's IPC as a transport.
@@ -42,6 +46,10 @@ connection.onInitialize((params: InitializeParams) => {
       textDocumentSync: TextDocumentSyncKind.Full,
       definitionProvider: true,
       referencesProvider: true,
+      completionProvider: {
+        resolveProvider: true,
+        triggerCharacters: ["!"],
+      }
     },
   };
   result.capabilities.documentHighlightProvider = false;
@@ -80,7 +88,6 @@ connection.onInitialize((params: InitializeParams) => {
 
   const hasFormattingCapability =
     !!capabilities.textDocument?.formatting?.dynamicRegistration;
-  console.log("hasFormattingCapability", hasFormattingCapability);
 
   if (hasFormattingCapability) {
     result.capabilities.documentFormattingProvider = true;
@@ -103,6 +110,43 @@ connection.onRequest("divideRhythm", (params: AbcTransformParams) => {
 connection.onRequest("multiplyRhythm", (params: AbcTransformParams) => {
   return abcServer.onRhythmTransform(params.uri, "*", params.selection);
 });
+connection.onCompletion(
+  (textDocumentPosition: TextDocumentPositionParams): CompletionItem[] => {
+    // The pass parameter contains the position of the text document in
+    // which code complete got requested. For the example we ignore this
+    // info and always provide the same completion items.
+    const doc = abcServer.abcDocuments.get(textDocumentPosition.textDocument.uri);
+    if (!doc) {
+      return [];
+    }
+    const char = abcServer.findCharInDoc(textDocumentPosition.textDocument.uri, textDocumentPosition.position.character, textDocumentPosition.position.line);
+    if (!char || char !== "!") {
+      return [];
+    }
+    // TODO check that the char is in the body.
+    return DECORATION_SYMBOLS.map((symbol, index) => {
+
+      /**
+       * TODO if documentation doesn't display, 
+       * use the onCompletionResolve
+       */
+      return <CompletionItem>{
+        data: index + 1,
+        documentation: symbol.documentation,
+        kind: CompletionItemKind.Text,
+        insertText: symbol.label.replace(/[!]/g, ""),
+        label: symbol.label,
+        labelDetails: "decoration",
+      };
+    });
+  }
+);
+
+connection.onCompletionResolve(
+  (item: CompletionItem): CompletionItem => {
+    return item;
+  }
+);
 
 documents.listen(connection);
 connection.listen();

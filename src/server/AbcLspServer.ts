@@ -98,6 +98,17 @@ export class AbcLspServer {
     );
     return [edit];
   }
+  findCharInDoc(uri: string, char: number, line: number) {
+    const abcDocument = this.abcDocuments.get(uri); // find doc in previously parsed docs
+    if (!abcDocument || !abcDocument.tokens) {
+      return [];
+    }
+    const doc = abcDocument.document;
+    const lineText = doc.getText().split("\n")[line];
+    const charIndex = lineText.indexOf(String.fromCharCode(char));
+    return lineText.charAt(char);
+    // return Position.create(line, charIndex);
+  }
 }
 
 

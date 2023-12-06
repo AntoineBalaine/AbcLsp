@@ -1,11 +1,6 @@
+import { AbcErrorReporter, File_structure, Parser, Scanner, Token, TokensVisitor } from "abc-parser";
 import { Diagnostic } from "vscode-languageserver";
 import { TextDocument } from "vscode-languageserver-textdocument";
-import { TokensVisitor } from "../Parser/Visitors/SemanticTokens";
-import { AbcErrorReporter } from "../Parser/parsers/ErrorReporter";
-import { Parser } from "../Parser/parsers/Parser";
-import { Scanner } from "../Parser/parsers/Scanner";
-import { File_structure } from "../Parser/types/Expr";
-import { Token } from "../Parser/types/token";
 import { mapAbcErrorsToDiagnostics, mapAbcWarningsToDiagnostics } from "./server_helpers";
 
 export class AbcDocument {

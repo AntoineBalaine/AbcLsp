@@ -1,3 +1,4 @@
+import { AbcFormatter, RhythmVisitor } from "abc-parser";
 import { Selection } from "vscode";
 import {
   HandlerResult,
@@ -9,8 +10,6 @@ import {
   TextEdit,
 } from "vscode-languageserver";
 import { TextDocument } from "vscode-languageserver-textdocument";
-import { AbcFormatter } from "../Parser/Visitors/Formatter";
-import { RhythmVisitor } from "../Parser/Visitors/RhythmTransform";
 import { AbcDocument } from "./AbcDocument";
 import { LspEventListener, mapTokenTypeToStandardScope } from "./server_helpers";
 

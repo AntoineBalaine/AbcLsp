@@ -1,7 +1,5 @@
+import { AbcError, TokenType, getTokenRange } from "abc-parser";
 import { Diagnostic, PublishDiagnosticsParams } from "vscode-languageserver";
-import { getTokenRange } from "../Parser/helpers";
-import { AbcError } from "../Parser/parsers/ErrorReporter";
-import { TokenType } from "../Parser/types/types";
 
 /**
  * TODO refactor these two functions. The map containing warnings and errors all together should be coming from the error reporter.

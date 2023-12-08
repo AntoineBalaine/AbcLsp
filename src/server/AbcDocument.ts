@@ -3,11 +3,25 @@ import { Diagnostic } from "vscode-languageserver";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { mapAbcErrorsToDiagnostics, mapAbcWarningsToDiagnostics } from "./server_helpers";
 
+/**
+ * AbcDocument stores an Abc `TextDocument`'s diagnostics, tokens, and AST.
+ * 
+ * Method `analyze()` returns an array of semantic tokens, or `void` in case of failure.
+ */
 export class AbcDocument {
   public diagnostics: Diagnostic[] = [];
   public tokens: Token[] = [];
   public AST: File_structure | null = null;
   constructor(public document: TextDocument) { }
+  /**
+   * Return an array of tokens, or void in case of failure.
+   * `analyze()` parses the document,
+   * stores the AST, 
+   * stores any diagnostics, 
+   * and stores the semantic tokens used for highlighting.
+   * 
+   * @returns an array of semantic tokens or void.
+   */
   analyze() {
     const source = String.raw`${this.document.getText()}`;
 

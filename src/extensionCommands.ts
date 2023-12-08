@@ -7,6 +7,11 @@ export type AbcTransformParams = {
   uri: string;
 };
 
+/**
+ * For now, transform commands are only for rhythms.
+ * They include `abc.divideRhythm`, and
+ * `abc.multiplyRhythm`.
+ */
 function registerTransformCommands(context: ExtensionContext, client: LanguageClient) {
   const commandsList = [
     ["abc.divideRhythm", "divideRhythm"],
@@ -35,7 +40,10 @@ function registerTransformCommands(context: ExtensionContext, client: LanguageCl
   });
 }
 
-// ===== ===== ===== MIDI INPUT ===== ===== =====
+/**
+ * This functionality is ripped from LilyPond's extension.
+ * Allows for taking MIDI input and converting it to ABC notation.
+ */
 const registerMidiInputs = (context: ExtensionContext, client: LanguageClient) => {
   // start midi input
   const startInputMidiCmd = commands.registerCommand(
@@ -77,6 +85,10 @@ const registerMidiInputs = (context: ExtensionContext, client: LanguageClient) =
   MIDIIn.initMIDIStatusBarItems();
 };
 
+/**
+ * Register the commands that the extension will use to ask the server to do special things.
+ * Amongst the server's capabilities are transforming rhythms, and taking midi inputs.
+ */
 export function registerCommands(context: ExtensionContext, client: LanguageClient) {
   registerTransformCommands(context, client);
   registerMidiInputs(context, client);

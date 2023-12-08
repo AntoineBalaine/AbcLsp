@@ -14,8 +14,11 @@ import { registerCommands } from "./extensionCommands";
 
 let client: LanguageClient;
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
+/** 
+ * This method is called when the extension is activated.
+ * 
+ * The extension is activated the very first time the command is executed
+*/
 export function activate(context: ExtensionContext) {
   // The server is implemented in node
   const serverModule = context.asAbsolutePath(

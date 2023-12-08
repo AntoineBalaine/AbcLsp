@@ -27,6 +27,9 @@ const connection = createConnection(ProposedFeatures.all);
 // Create a simple text document manager.
 const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
 
+/**
+ * Instantiate an AbcServer, which will store the documents and handle the requests.
+ */
 const abcServer = new AbcLspServer(documents, (type, params) => {
   switch (type) {
     case "diagnostics":
@@ -37,6 +40,11 @@ const abcServer = new AbcLspServer(documents, (type, params) => {
   }
 });
 
+/**
+ * Check the capabilities of the client,
+ * and return the capabilities of the server.
+ * This is so the client knows what to ask from the server.
+ */
 connection.onInitialize((params: InitializeParams) => {
   const capabilities = params.capabilities;
   const hasSemanticTokensCapability =
@@ -95,7 +103,9 @@ connection.onInitialize((params: InitializeParams) => {
 
   return result;
 });
+
 connection.onInitialized(() => { });
+
 connection.languages.semanticTokens.on((params) => {
   return abcServer.onSemanticTokens(params.textDocument.uri);
 });
@@ -112,14 +122,17 @@ connection.onRequest("multiplyRhythm", (params: AbcTransformParams) => {
 });
 connection.onCompletion(
   (textDocumentPosition: TextDocumentPositionParams): CompletionItem[] => {
-    // The pass parameter contains the position of the text document in
-    // which code complete got requested. For the example we ignore this
-    // info and always provide the same completion items.
+    // The passed parameter contains the position of the text document in
+    // which code complete got requested.
     const doc = abcServer.abcDocuments.get(textDocumentPosition.textDocument.uri);
     if (!doc) {
       return [];
     }
     const char = abcServer.findCharInDoc(textDocumentPosition.textDocument.uri, textDocumentPosition.position.character, textDocumentPosition.position.line);
+
+    /**
+     * If the char is not a completion trigger, ignore.
+     */
     if (!char || char !== "!") {
       return [];
     }

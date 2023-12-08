@@ -1,5 +1,15 @@
+/**
+ * {@property label} is the string that will be inserted into the editor, 
+ * using the format `!<symbol>!`.
+ * 
+ * {@property documentation} is the string that will be displayed in the hover.
+ */
 type DecorationSymbol = { label: string; documentation: string };
 
+/**
+ * Array of decoration symbols used by the abc standard.
+ * Typically, these will be fingerings, dynamics, and articulations.
+ */
 export const DECORATION_SYMBOLS: Array<DecorationSymbol> = [
   { label: "!+!", documentation: "left-hand pizzicato, or rasp for French horns", },
   { label: "!0!", documentation: "fingerings", },

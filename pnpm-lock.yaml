@@ -5,6 +5,9 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
+  abc-parser:
+    specifier: https://github.com/AntoineBalaine/AbcLsp.git
+    version: link:../abc-parser
   jzz:
     specifier: ^1.7.4
     version: 1.7.4

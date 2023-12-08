@@ -1,10 +1,11 @@
+import { AbcError, TokenType, getTokenRange } from "abc-parser";
 import { Diagnostic, PublishDiagnosticsParams } from "vscode-languageserver";
-import { getTokenRange } from "../Parser/helpers";
-import { AbcError } from "../Parser/parsers/ErrorReporter";
-import { TokenType } from "../Parser/types/types";
 
 /**
  * TODO refactor these two functions. The map containing warnings and errors all together should be coming from the error reporter.
+ */
+/**
+ * convert errors from an {@link AbcErrorReporter} to the server's {@link Diagnostic}s
  */
 export function mapAbcErrorsToDiagnostics(abcErrors: Array<AbcError>): Array<Diagnostic> {
   return abcErrors.map((error): Diagnostic => {
@@ -17,6 +18,9 @@ export function mapAbcErrorsToDiagnostics(abcErrors: Array<AbcError>): Array<Dia
   }
   );
 }
+/**
+ * convert warnings from an {@link AbcErrorReporter} to the server's {@link Diagnostic}s
+ */
 export function mapAbcWarningsToDiagnostics(abcwarnings: Array<AbcError>): Array<Diagnostic> {
   return abcwarnings.map((warning): Diagnostic => {
     return {
@@ -28,6 +32,15 @@ export function mapAbcWarningsToDiagnostics(abcwarnings: Array<AbcError>): Array
   });
 }
 
+/**
+ * Convert an {@link TokenType} from the parse's AST to a standard scope name used by vscode.
+ * This is so that the client can display syntax highlighting.
+ * 
+ * Since ABC is a markdown format that uses music notation,
+ * it's necessary to have this function to build correspondence 
+ * between the music terms and the programming-language terms 
+ * that are used in syntax highlighting.
+ */
 export function mapTokenTypeToStandardScope(type: number): number {
   switch (type) {
     case TokenType.BARLINE: //|
@@ -105,6 +118,9 @@ export type LspEventListener = (
   params: PublishDiagnosticsParams
 ) => void;
 
+/**
+ * These are the standard scope names that are used by vscode to display syntax highlighting.
+ */
 export enum vscode_standardTokenScopes {
   class,
   comment,

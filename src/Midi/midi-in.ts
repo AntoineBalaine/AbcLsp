@@ -1,9 +1,9 @@
 import JZZ from "jzz";
-import * as vscode from "vscode";
 import { Accidentals, LogLevel, getConfiguration, logger } from "./midi-utils";
 // no types for jzz-midi-smf
 // @ts-ignore
 import jzzMidiSmf from "jzz-midi-smf";
+import { StatusBarAlignment, StatusBarItem, TextEditorEdit, window } from "vscode";
 jzzMidiSmf(JZZ);
 export namespace MIDIIn {
   type MIDIInStateType = {
@@ -24,7 +24,7 @@ export namespace MIDIIn {
   };
 
   let MIDIInState: MIDIInStateType = initialMidiInState;
-  const statusBarItems: Record<string, vscode.StatusBarItem> = {};
+  const statusBarItems: Record<string, StatusBarItem> = {};
 
   // notes that haven't been lifted up
   export const activeNotes: Set<number> = new Set();
@@ -169,12 +169,12 @@ export namespace MIDIIn {
     const outputString = notesToString(notes, accidentals, relativeMode);
     if (outputString.length) {
       try {
-        const activeTextEditor = vscode.window.activeTextEditor;
+        const activeTextEditor = window.activeTextEditor;
         if (!activeTextEditor) {
           throw new Error(`No active text editor open`);
         }
 
-        activeTextEditor.edit((editBuilder: vscode.TextEditorEdit) => {
+        activeTextEditor.edit((editBuilder: TextEditorEdit) => {
           const position = activeTextEditor.selection.active;
           editBuilder.insert(position, outputString);
         });
@@ -305,7 +305,7 @@ export namespace MIDIIn {
   // set input midi device
   export const setInputMIDIDevice = async () => {
     const inputs = await getInputMIDIDevices();
-    vscode.window.showQuickPick(inputs).then((val: string | undefined) => {
+    window.showQuickPick(inputs).then((val: string | undefined) => {
       if (val) {
         const config = getConfiguration();
         config.update(`midiInput.input`, val);
@@ -319,8 +319,8 @@ export namespace MIDIIn {
 
   export const initMIDIStatusBarItems = () => {
     {
-      const startBtn = vscode.window.createStatusBarItem(
-        vscode.StatusBarAlignment.Right,
+      const startBtn = window.createStatusBarItem(
+        StatusBarAlignment.Right,
         2
       );
       startBtn.command = `abc.startMIDIInput`;
@@ -329,8 +329,8 @@ export namespace MIDIIn {
       statusBarItems.start = startBtn;
     }
     {
-      const stopBtn = vscode.window.createStatusBarItem(
-        vscode.StatusBarAlignment.Right,
+      const stopBtn = window.createStatusBarItem(
+        StatusBarAlignment.Right,
         1
       );
       stopBtn.command = `abc.stopMIDIInput`;
@@ -342,7 +342,7 @@ export namespace MIDIIn {
   };
 
   const shouldShowStatusBarItems = (): boolean => {
-    const activeTextEditor = vscode.window.activeTextEditor;
+    const activeTextEditor = window.activeTextEditor;
     if (activeTextEditor && activeTextEditor.document.languageId === "abc") {
       return true;
     }

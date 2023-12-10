@@ -2,7 +2,7 @@
   "name": "abc-ls",
   "displayName": "abc-ls",
   "description": "",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "antoinebalaine",
   "icon": "./assets/trebleclef_abc.png",
   "repository": "https://github.com/AntoineBalaine/AbcLsp",

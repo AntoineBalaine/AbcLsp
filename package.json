@@ -3,6 +3,8 @@
   "displayName": "abc-ls",
   "description": "",
   "version": "0.0.1",
+  "publisher": "antoinebalaine",
+  "repository": "https://github.com/AntoineBalaine/AbcLsp",
   "engines": {
     "vscode": "^1.84.0"
   },
@@ -95,7 +97,7 @@
     "watch": "tsc -watch -p ./",
     "pretest": "pnpm run compile && pnpm run lint",
     "lint": "eslint src --ext ts",
-    "test": "node ./out/test/runTest.js"
+    "_test": "node ./out/test/runTest.js"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.3",

@@ -1,6 +1,6 @@
 {
-  "name": "abc_lsp",
-  "displayName": "abc_lsp",
+  "name": "abc-ls",
+  "displayName": "abc-ls",
   "description": "",
   "version": "0.0.1",
   "engines": {

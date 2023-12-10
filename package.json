@@ -4,6 +4,7 @@
   "description": "",
   "version": "0.0.1",
   "publisher": "antoinebalaine",
+  "icon": "./assets/trebleclef_abc.png",
   "repository": "https://github.com/AntoineBalaine/AbcLsp",
   "engines": {
     "vscode": "^1.84.0"

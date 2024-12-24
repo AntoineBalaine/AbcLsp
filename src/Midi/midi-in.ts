@@ -8,14 +8,14 @@ jzzMidiSmf(JZZ);
 export namespace MIDIIn {
   type MIDIInStateType = {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    midiInPort: any
-    active: boolean
+    midiInPort: any;
+    active: boolean;
   };
 
   export type MIDIInputConfig = {
-    accidentals: Accidentals
-    relativeMode: boolean
-    chordMode: boolean
+    accidentals: Accidentals;
+    relativeMode: boolean;
+    chordMode: boolean;
   };
 
   const initialMidiInState: MIDIInStateType = {
@@ -48,9 +48,7 @@ export namespace MIDIIn {
 
   export const getAbsoluteOctavePostfix = (octaveNum: number): string => {
     if (!Number.isInteger(octaveNum) || octaveNum < 0 || octaveNum > 9) {
-      throw new Error(
-        `OctaveNumber should be an integer within [0,9]; got ${octaveNum}`
-      );
+      throw new Error(`OctaveNumber should be an integer within [0,9]; got ${octaveNum}`);
     }
     if (octaveNum < 3) {
       return `,`.repeat(3 - octaveNum);
@@ -62,10 +60,7 @@ export namespace MIDIIn {
   };
 
   // maps midi numbers from 0-11 to the name based on the sharps/flat mode
-  export const getNoteChar = (
-    noteNum: number,
-    accidentals?: Accidentals,
-  ): string => {
+  export const getNoteChar = (noteNum: number, accidentals?: Accidentals): string => {
     const isSharp = accidentals && accidentals === `sharps`;
     const map: Record<number, string> = {
       0: `C`,
@@ -83,22 +78,14 @@ export namespace MIDIIn {
     };
 
     if (!(noteNum in map)) {
-      throw new Error(
-        `NoteNumber should be a integer within [0,11]; got ${noteNum}`
-      );
+      throw new Error(`NoteNumber should be a integer within [0,11]; got ${noteNum}`);
     }
     return map[noteNum];
   };
 
-  export const midiNumberToNoteName = (
-    note: number,
-    accidentals?: Accidentals,
-    relativeMode?: boolean
-  ): string => {
+  export const midiNumberToNoteName = (note: number, accidentals?: Accidentals, relativeMode?: boolean): string => {
     if (!Number.isInteger(note) || note < 12 || note > 127) {
-      throw new Error(
-        `MIDI Note should be an integer within [12, 127], got ${note}`
-      );
+      throw new Error(`MIDI Note should be an integer within [12, 127], got ${note}`);
     }
     // C3(48) -> 3
     const octaveNum = Math.trunc(note / 12) - 1;
@@ -126,25 +113,17 @@ export namespace MIDIIn {
     }
   };
 
-  export const notesToString = (
-    notes: Set<number>,
-    accidentals?: Accidentals,
-    relativeMode?: boolean
-  ): string => {
+  export const notesToString = (notes: Set<number>, accidentals?: Accidentals, relativeMode?: boolean): string => {
     try {
       if (notes.size === 1) {
-        return (
-          midiNumberToNoteName([...notes][0], accidentals, relativeMode)
-        );
+        return midiNumberToNoteName([...notes][0], accidentals, relativeMode);
       } else if (notes.size > 1) {
         // chord
         return (
           ` <` +
           [...notes]
             .sort()
-            .map((note) =>
-              midiNumberToNoteName(note, accidentals, relativeMode)
-            )
+            .map((note) => midiNumberToNoteName(note, accidentals, relativeMode))
             .join(` `) +
           `>`
         );
@@ -155,17 +134,9 @@ export namespace MIDIIn {
     return ``;
   };
 
-  export type OutputNotesFnType = (
-    notes: Set<number>,
-    accidentals: "sharps" | "flats",
-    relativeMode: boolean
-  ) => void;
+  export type OutputNotesFnType = (notes: Set<number>, accidentals: "sharps" | "flats", relativeMode: boolean) => void;
   // actually output the notes as text in the editor
-  const outputNotes: OutputNotesFnType = (
-    notes: Set<number>,
-    accidentals?: Accidentals,
-    relativeMode?: boolean
-  ) => {
+  const outputNotes: OutputNotesFnType = (notes: Set<number>, accidentals?: Accidentals, relativeMode?: boolean) => {
     const outputString = notesToString(notes, accidentals, relativeMode);
     if (outputString.length) {
       try {
@@ -184,58 +155,44 @@ export namespace MIDIIn {
     }
   };
 
-  export const processNote =
-    (
-      MIDINoteNumber: number,
-      keyDown: boolean,
-      MIDIInputConfig: MIDIInputConfig
-    ) =>
-      (outputNoteFn: OutputNotesFnType) => {
-        const { accidentals, relativeMode, chordMode } = MIDIInputConfig;
+  export const processNote = (MIDINoteNumber: number, keyDown: boolean, MIDIInputConfig: MIDIInputConfig) => (outputNoteFn: OutputNotesFnType) => {
+    const { accidentals, relativeMode, chordMode } = MIDIInputConfig;
 
-        if (keyDown) {
-          // press down
-          // if not chord mode, input the note that was still held
-          if (!chordMode) {
-            if (activeNotes.size) {
-              if (activeNotes.size > 1) {
-                logger(
-                  `Outputting a chord despite not in chord mode!`,
-                  LogLevel.warning,
-                  false
-                );
-              }
-              outputNoteFn(activeNotes, accidentals, relativeMode);
-              activeNotes.clear();
-            }
+    if (keyDown) {
+      // press down
+      // if not chord mode, input the note that was still held
+      if (!chordMode) {
+        if (activeNotes.size) {
+          if (activeNotes.size > 1) {
+            logger(`Outputting a chord despite not in chord mode!`, LogLevel.warning, false);
           }
-          activeNotes.add(MIDINoteNumber);
-        } else {
-          // lift
-          if (chordMode) {
-            // lifting during chord mode
-            chordNotes.add(MIDINoteNumber);
-            activeNotes.delete(MIDINoteNumber);
-            if (activeNotes.size === 0) {
-              outputNoteFn(chordNotes, accidentals, relativeMode);
-              chordNotes.clear();
-            }
-          } else {
-            // lifting during non-chord mode
-            if (activeNotes.size) {
-              if (activeNotes.size > 1) {
-                logger(
-                  `Outputting a chord despite not in chord mode!`,
-                  LogLevel.warning,
-                  false
-                );
-              }
-              outputNoteFn(activeNotes, accidentals, relativeMode);
-              activeNotes.clear();
-            }
-          }
+          outputNoteFn(activeNotes, accidentals, relativeMode);
+          activeNotes.clear();
         }
-      };
+      }
+      activeNotes.add(MIDINoteNumber);
+    } else {
+      // lift
+      if (chordMode) {
+        // lifting during chord mode
+        chordNotes.add(MIDINoteNumber);
+        activeNotes.delete(MIDINoteNumber);
+        if (activeNotes.size === 0) {
+          outputNoteFn(chordNotes, accidentals, relativeMode);
+          chordNotes.clear();
+        }
+      } else {
+        // lifting during non-chord mode
+        if (activeNotes.size) {
+          if (activeNotes.size > 1) {
+            logger(`Outputting a chord despite not in chord mode!`, LogLevel.warning, false);
+          }
+          outputNoteFn(activeNotes, accidentals, relativeMode);
+          activeNotes.clear();
+        }
+      }
+    }
+  };
 
   // ._receive is passed to JZZ from jzz-midi-smf
   // @ts-ignore
@@ -244,11 +201,7 @@ export namespace MIDIIn {
     const statusByte: number = msg[0] & 0xf0; // Get only the status byte type, ignore the channel
     const MIDINoteNumber: number = msg[1];
     const velocity: number = msg[2];
-    if (
-      [0x80, 0x90].includes(statusByte) &&
-      MIDINoteNumber >= 12 &&
-      MIDINoteNumber <= 127
-    ) {
+    if ([0x80, 0x90].includes(statusByte) && MIDINoteNumber >= 12 && MIDINoteNumber <= 127) {
       // 0x90 indicates a keyDown event, 0 velocity check in the case of running status mode
       const keyDown: boolean = statusByte === 0x90 && velocity > 0;
       const MIDIInputConfig = getMIDIInputConfig();
@@ -267,9 +220,7 @@ export namespace MIDIIn {
         throw new Error(`No input MIDI devices are found.`);
       }
       const config = getConfiguration();
-      MIDIInState.midiInPort = config.midiInput.input.length
-        ? JZZ().openMidiIn(config.midiInput.input)
-        : JZZ().openMidiIn();
+      MIDIInState.midiInPort = config.midiInput.input.length ? JZZ().openMidiIn(config.midiInput.input) : JZZ().openMidiIn();
 
       MIDIInState.midiInPort.connect(midiInMsgProcessor);
       MIDIInState.active = true;
@@ -319,20 +270,14 @@ export namespace MIDIIn {
 
   export const initMIDIStatusBarItems = () => {
     {
-      const startBtn = window.createStatusBarItem(
-        StatusBarAlignment.Right,
-        2
-      );
+      const startBtn = window.createStatusBarItem(StatusBarAlignment.Right, 2);
       startBtn.command = `abc.startMIDIInput`;
       startBtn.text = `$(circle-filled) Start MIDI Input`;
       startBtn.tooltip = `Start MIDI Input`;
       statusBarItems.start = startBtn;
     }
     {
-      const stopBtn = window.createStatusBarItem(
-        StatusBarAlignment.Right,
-        1
-      );
+      const stopBtn = window.createStatusBarItem(StatusBarAlignment.Right, 1);
       stopBtn.command = `abc.stopMIDIInput`;
       stopBtn.text = `$(debug-stop) Stop MIDI Input`;
       stopBtn.tooltip = `Stop MIDI Input`;

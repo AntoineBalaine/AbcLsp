@@ -10,17 +10,22 @@ export namespace MIDIIn {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     midiInPort: any;
     active: boolean;
+    lastNoteTime: number; // timestamp of last note
+    chordTimeout: NodeJS.Timeout | null; // timer for chord completion
   };
 
   export type MIDIInputConfig = {
     accidentals: Accidentals;
     relativeMode: boolean;
     chordMode: boolean;
+    chordTimeWindow: number; // in milliseconds
   };
 
   const initialMidiInState: MIDIInStateType = {
     midiInPort: undefined,
     active: false,
+    lastNoteTime: 0,
+    chordTimeout: null,
   };
 
   let MIDIInState: MIDIInStateType = initialMidiInState;
@@ -37,12 +42,13 @@ export namespace MIDIIn {
   const getMIDIInputConfig = (): MIDIInputConfig => {
     const config = getConfiguration();
 
-    const { accidentals, relativeMode, chordMode } = config.midiInput;
+    const { accidentals, relativeMode, chordMode, chordTimeWindow } = config.midiInput;
 
     return {
       accidentals: accidentals,
       relativeMode: relativeMode,
       chordMode: chordMode,
+      chordTimeWindow: chordTimeWindow,
     };
   };
 
@@ -156,42 +162,36 @@ export namespace MIDIIn {
   };
 
   export const processNote = (MIDINoteNumber: number, keyDown: boolean, MIDIInputConfig: MIDIInputConfig) => (outputNoteFn: OutputNotesFnType) => {
-    const { accidentals, relativeMode, chordMode } = MIDIInputConfig;
+    const { accidentals, relativeMode, chordMode, chordTimeWindow } = MIDIInputConfig;
+    if (!keyDown) {
+      // process inputs on key down?
+      return;
+    }
 
-    if (keyDown) {
-      // press down
-      // if not chord mode, input the note that was still held
-      if (!chordMode) {
-        if (activeNotes.size) {
-          if (activeNotes.size > 1) {
-            logger(`Outputting a chord despite not in chord mode!`, LogLevel.warning, false);
-          }
-          outputNoteFn(activeNotes, accidentals, relativeMode);
-          activeNotes.clear();
-        }
-      }
+    const currentTime = Date.now();
+
+    if (MIDIInState.chordTimeout) {
+      clearTimeout(MIDIInState.chordTimeout);
+    }
+
+    if (currentTime - MIDIInState.lastNoteTime < chordTimeWindow) {
       activeNotes.add(MIDINoteNumber);
     } else {
-      // lift
-      if (chordMode) {
-        // lifting during chord mode
-        chordNotes.add(MIDINoteNumber);
-        activeNotes.delete(MIDINoteNumber);
-        if (activeNotes.size === 0) {
-          outputNoteFn(chordNotes, accidentals, relativeMode);
-          chordNotes.clear();
-        }
-      } else {
-        // lifting during non-chord mode
-        if (activeNotes.size) {
-          if (activeNotes.size > 1) {
-            logger(`Outputting a chord despite not in chord mode!`, LogLevel.warning, false);
-          }
-          outputNoteFn(activeNotes, accidentals, relativeMode);
-          activeNotes.clear();
-        }
+      if (activeNotes.size > 0) {
+        outputNoteFn(activeNotes, accidentals, relativeMode);
+        activeNotes.clear();
       }
+      activeNotes.add(MIDINoteNumber);
     }
+
+    MIDIInState.chordTimeout = setTimeout(() => {
+      if (activeNotes.size > 0) {
+        outputNoteFn(activeNotes, accidentals, relativeMode);
+        activeNotes.clear();
+      }
+    }, chordTimeWindow);
+
+    MIDIInState.lastNoteTime = currentTime;
   };
 
   // ._receive is passed to JZZ from jzz-midi-smf

@@ -27,6 +27,8 @@ export class AbcDocument {
   analyze() {
     const source = String.raw`${this.document.getText()}`;
 
+    this.ctx.errorReporter.resetWarnings();
+    this.ctx.errorReporter.resetErrors();
     this.diagnostics = [];
     this.tokens = [];
 

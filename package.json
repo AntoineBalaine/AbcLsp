@@ -98,7 +98,9 @@
     "watch": "tsc -watch -p ./",
     "pretest": "pnpm run compile && pnpm run lint",
     "lint": "eslint src --ext ts",
-    "_test": "node ./out/test/runTest.js"
+    "_test": "node ./out/test/runTest.js",
+    "package": "vsce package",
+    "publish": "vsce publish"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.3",
@@ -113,7 +115,7 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "abc-parser": "^0.0.1",
+    "abc-parser": "file:../abc_parse/out",
     "jzz": "^1.7.4",
     "jzz-midi-smf": "^1.8.1",
     "vscode-languageclient": "^9.0.1",

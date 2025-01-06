@@ -121,18 +121,12 @@ export namespace MIDIIn {
 
   export const notesToString = (notes: Set<number>, accidentals?: Accidentals, relativeMode?: boolean): string => {
     try {
+      const noteArray = [...notes].sort((a, b) => a - b); // Sort notes for consistent chord ordering
       if (notes.size === 1) {
-        return midiNumberToNoteName([...notes][0], accidentals, relativeMode);
+        return midiNumberToNoteName(noteArray[0], accidentals, relativeMode);
       } else if (notes.size > 1) {
         // chord
-        return (
-          ` <` +
-          [...notes]
-            .sort()
-            .map((note) => midiNumberToNoteName(note, accidentals, relativeMode))
-            .join(` `) +
-          `>`
-        );
+        return ` [${noteArray.map((note) => midiNumberToNoteName(note, accidentals, relativeMode)).join("")}]`;
       }
     } catch (err) {
       logger(`Error outputting note: ${err}`, LogLevel.error, false);
@@ -160,38 +154,45 @@ export namespace MIDIIn {
       }
     }
   };
-
   export const processNote = (MIDINoteNumber: number, keyDown: boolean, MIDIInputConfig: MIDIInputConfig) => (outputNoteFn: OutputNotesFnType) => {
-    const { accidentals, relativeMode, chordMode, chordTimeWindow } = MIDIInputConfig;
-    if (!keyDown) {
-      // process inputs on key down?
-      return;
-    }
+    const { accidentals, relativeMode, chordTimeWindow } = MIDIInputConfig;
 
-    const currentTime = Date.now();
-
-    if (MIDIInState.chordTimeout) {
-      clearTimeout(MIDIInState.chordTimeout);
-    }
-
-    if (currentTime - MIDIInState.lastNoteTime < chordTimeWindow) {
+    if (keyDown) {
+      const currentTime = Date.now();
+      // Add note to active notes
       activeNotes.add(MIDINoteNumber);
+      MIDIInState.lastNoteTime = currentTime;
     } else {
-      if (activeNotes.size > 0) {
-        outputNoteFn(activeNotes, accidentals, relativeMode);
-        activeNotes.clear();
+      // Note is released
+      // If this is the first note being released after the last note was pressed
+      if (activeNotes.has(MIDINoteNumber)) {
+        const currentTime = Date.now();
+        const timeSinceLastNote = currentTime - MIDIInState.lastNoteTime;
+
+        // Clear any existing timeout
+        if (MIDIInState.chordTimeout) {
+          clearTimeout(MIDIInState.chordTimeout);
+        }
+
+        // If we've waited longer than the chord window, output everything as a chord
+        if (timeSinceLastNote > chordTimeWindow) {
+          // Output as a chord if we have multiple notes
+          outputNoteFn(activeNotes, accidentals, relativeMode);
+          activeNotes.clear();
+        } else {
+          // Start a timeout to wait for more possible chord notes
+          MIDIInState.chordTimeout = setTimeout(() => {
+            if (activeNotes.size > 0) {
+              outputNoteFn(activeNotes, accidentals, relativeMode);
+              activeNotes.clear();
+            }
+          }, chordTimeWindow);
+        }
+
+        // Remove the released note
+        activeNotes.delete(MIDINoteNumber);
       }
-      activeNotes.add(MIDINoteNumber);
     }
-
-    MIDIInState.chordTimeout = setTimeout(() => {
-      if (activeNotes.size > 0) {
-        outputNoteFn(activeNotes, accidentals, relativeMode);
-        activeNotes.clear();
-      }
-    }, chordTimeWindow);
-
-    MIDIInState.lastNoteTime = currentTime;
   };
 
   // ._receive is passed to JZZ from jzz-midi-smf

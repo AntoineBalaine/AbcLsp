@@ -4,7 +4,6 @@
   "description": "",
   "version": "0.0.2",
   "publisher": "antoinebalaine",
-  "icon": "./assets/trebleclef_abc.png",
   "repository": "https://github.com/AntoineBalaine/AbcLsp",
   "engines": {
     "vscode": "^1.84.0"
@@ -93,10 +92,10 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "pnpm run compile",
+    "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "pretest": "pnpm run compile && pnpm run lint",
+    "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
     "_test": "node ./out/test/runTest.js",
     "package": "vsce package",

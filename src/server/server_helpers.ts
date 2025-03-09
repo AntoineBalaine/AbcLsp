@@ -44,12 +44,12 @@ export function mapAbcWarningsToDiagnostics(abcwarnings: Array<AbcError>): Array
 export function mapTokenTypeToStandardScope(type: number): number {
   switch (type) {
     case TokenType.BARLINE: //|
-    case TokenType.BAR_COLON: // |:
-    case TokenType.BAR_DBL: // ||
-    case TokenType.BAR_DIGIT: // |1
-    case TokenType.BAR_RIGHTBRKT: // |]
-    case TokenType.COLON_BAR: // :|
-    case TokenType.COLON_BAR_DIGIT: // :|1
+      // case TokenType.BAR_COLON: // |:
+      // case TokenType.BAR_DBL: // ||
+      // case TokenType.BAR_DIGIT: // |1
+      // case TokenType.BAR_RIGHTBRKT: // |]
+      // case TokenType.COLON_BAR: // :|
+      // case TokenType.COLON_BAR_DIGIT: // :|1
       return vscode_standardTokenScopes.string;
     case TokenType.COLON: // :
       return vscode_standardTokenScopes.string;
@@ -86,16 +86,16 @@ export function mapTokenTypeToStandardScope(type: number): number {
       return vscode_standardTokenScopes.string;
     case TokenType.RESERVED_CHAR:
       return vscode_standardTokenScopes.string;
-    case TokenType.LEFTBRKT_BAR: // [|
-    case TokenType.LEFTBRKT_NUMBER: // [number
+    // case TokenType.LEFTBRKT_BAR: // [|
+    // case TokenType.LEFTBRKT_NUMBER: // [number
     case TokenType.LEFTBRKT: // [
     case TokenType.LEFT_BRACE: // {
     case TokenType.RIGHT_BRACE: // }
     case TokenType.RIGHT_BRKT: // ]
     case TokenType.RIGHT_PAREN: // )
       return vscode_standardTokenScopes.string;
-    case TokenType.COLON_DBL: // (1 rhythm
-    case TokenType.COLON_NUMBER: // (1 rhythm
+    // case TokenType.COLON_DBL: // (1 rhythm
+    // case TokenType.COLON_NUMBER: // (1 rhythm
     case TokenType.LEFTPAREN_NUMBER: // (1 rhythm
       return vscode_standardTokenScopes.number;
     case TokenType.GREATER: //>>>>> rhythm

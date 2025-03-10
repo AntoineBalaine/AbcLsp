@@ -19,11 +19,11 @@
     "commands": [
       {
         "command": "abc.divideRhythm",
-        "title": "Divide Rhythms"
+        "title": "abc: Divide Rhythms"
       },
       {
         "command": "abc.multiplyRhythm",
-        "title": "Multiply Rhythms"
+        "title": "abc: Multiply Rhythms"
       },
       {
         "command": "abc.startMIDIInput",

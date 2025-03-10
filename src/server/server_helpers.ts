@@ -1,4 +1,5 @@
 import { AbcError, TokenType, getTokenRange } from "abc-parser";
+import { TT } from "abc-parser/src/parsers/scan2";
 import { Diagnostic, PublishDiagnosticsParams } from "vscode-languageserver";
 
 /**
@@ -108,6 +109,71 @@ export function mapTokenTypeToStandardScope(type: number): number {
       return vscode_standardTokenScopes.regexp;
     case TokenType.TILDE: // ~
       return vscode_standardTokenScopes.string;
+    default:
+      return -1;
+  }
+}
+
+export function mapTTtoStandardScope(type: number): number {
+  switch (type) {
+    case TT.ACCIDENTAL:
+      return vscode_standardTokenScopes.decorator;
+    case TT.AMPERSAND:
+    case TT.ANNOTATION:
+      return vscode_standardTokenScopes.comment;
+    case TT.BARLINE:
+      return vscode_standardTokenScopes.string;
+    case TT.BCKTCK_SPC:
+      return vscode_standardTokenScopes.comment;
+    case TT.CHRD_LEFT_BRKT:
+    case TT.CHRD_RIGHT_BRKT:
+      return vscode_standardTokenScopes.string;
+    case TT.COMMENT:
+      return vscode_standardTokenScopes.comment;
+    case TT.DECORATION:
+      return vscode_standardTokenScopes.decorator;
+    case TT.ESCAPED_CHAR:
+      return vscode_standardTokenScopes.comment;
+    case TT.GRC_GRP_LEFT_BRACE:
+    case TT.GRC_GRP_RGHT_BRACE:
+    case TT.GRC_GRP_SLSH:
+      return vscode_standardTokenScopes.string;
+    case TT.INFO_STR:
+      return vscode_standardTokenScopes.comment;
+    case TT.INF_HDR:
+      return vscode_standardTokenScopes.keyword;
+    case TT.INF_TXT:
+      return vscode_standardTokenScopes.string;
+    case TT.INLN_FLD_LFT_BRKT:
+    case TT.INLN_FLD_RGT_BRKT:
+    case TT.NOTE_LETTER:
+      return vscode_standardTokenScopes.variable;
+    case TT.OCTAVE:
+    case TT.REST:
+      return vscode_standardTokenScopes.variable;
+    case TT.RHY_BRKN:
+    case TT.RHY_DENOM:
+    case TT.RHY_NUMER:
+    case TT.RHY_SEP:
+      return vscode_standardTokenScopes.number; // rhythm
+    case TT.SLUR:
+    case TT.STYLESHEET_DIRECTIVE:
+      return vscode_standardTokenScopes.comment;
+    case TT.SYMBOL:
+      return vscode_standardTokenScopes.regexp;
+    case TT.TIE:
+    case TT.TUPLET:
+      return vscode_standardTokenScopes.string;
+    case TT.VOICE:
+    case TT.VOICE_OVRLAY:
+    case TT.Y_SPC:
+      return vscode_standardTokenScopes.string;
+    case TT.REPEAT_NUMBER:
+      return vscode_standardTokenScopes.number; // rhythm
+    case TT.REPEAT_COMMA:
+    case TT.REPEAT_DASH:
+    case TT.REPEAT_X:
+      return vscode_standardTokenScopes.comment;
     default:
       return -1;
   }

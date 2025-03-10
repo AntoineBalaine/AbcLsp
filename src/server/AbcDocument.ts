@@ -1,4 +1,4 @@
-import { AbcErrorReporter, File_structure, Parser, Scanner, Token, TokensVisitor } from "abc-parser";
+import { AbcErrorReporter, File_structure, Parser, Scanner, Token, TokensVisitor, Scanner2, Token2 } from "abc-parser";
 import { Diagnostic } from "vscode-languageserver";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { mapAbcErrorsToDiagnostics, mapAbcWarningsToDiagnostics } from "./server_helpers";
@@ -12,6 +12,7 @@ import { ABCContext } from "abc-parser/src/parsers/Context";
 export class AbcDocument {
   public diagnostics: Diagnostic[] = [];
   public tokens: Token[] = [];
+  public tokens2: Token2[] = [];
   public AST: File_structure | null = null;
   public ctx = new ABCContext();
   constructor(public document: TextDocument) {}
@@ -31,7 +32,9 @@ export class AbcDocument {
     this.ctx.errorReporter.resetErrors();
     this.diagnostics = [];
     this.tokens = [];
+    this.tokens2 = [];
 
+    this.tokens2 = Scanner2(source);
     const tokens = new Scanner(source, this.ctx).scanTokens();
     const parser = new Parser(tokens, this.ctx);
     this.AST = parser.parse();

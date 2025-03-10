@@ -3,7 +3,7 @@ import { Selection } from "vscode";
 import { HandlerResult, Position, Range, SemanticTokens, SemanticTokensBuilder, TextDocuments, TextEdit } from "vscode-languageserver";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { AbcDocument } from "./AbcDocument";
-import { LspEventListener, mapTokenTypeToStandardScope } from "./server_helpers";
+import { LspEventListener, mapTTtoStandardScope } from "./server_helpers";
 
 /**
  * Storage for abc scores, their diagnostics,
@@ -15,10 +15,7 @@ export class AbcLspServer {
    * Uses the document's uri as key to index the scores.
    */
   abcDocuments: Map<string, AbcDocument> = new Map();
-  constructor(
-    private documents: TextDocuments<TextDocument>,
-    private listener: LspEventListener
-  ) {
+  constructor(private documents: TextDocuments<TextDocument>, private listener: LspEventListener) {
     this.documents.onDidChangeContent((change) => {
       this.onDidChangeContent(change.document.uri);
     });
@@ -61,18 +58,18 @@ export class AbcLspServer {
    */
   onSemanticTokens(uri: string): HandlerResult<SemanticTokens, void> {
     const abcDocument = this.abcDocuments.get(uri); // find doc in previously parsed docs
-    if (!abcDocument || !abcDocument.tokens) {
+    if (!abcDocument || !abcDocument.tokens2) {
       return { data: [] };
     }
 
     const builder = new SemanticTokensBuilder();
 
-    for (const token of abcDocument.tokens) {
+    for (const token of abcDocument.tokens2) {
       builder.push(
         token.line,
         token.position,
         token.lexeme.length,
-        mapTokenTypeToStandardScope(token.type), // typeId TODO figure out the correct typings
+        mapTTtoStandardScope(token.type), // typeId TODO figure out the correct typings
         0
       );
     }

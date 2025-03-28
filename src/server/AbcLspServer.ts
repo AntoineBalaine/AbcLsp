@@ -1,4 +1,4 @@
-import { AbcFormatter, RhythmVisitor } from "abc-parser";
+import { AbcFormatter2 as AbcFormatter, RhythmVisitor } from "abc-parser";
 import { Selection } from "vscode";
 import { HandlerResult, Position, Range, SemanticTokens, SemanticTokensBuilder, TextDocuments, TextEdit } from "vscode-languageserver";
 import { TextDocument } from "vscode-languageserver-textdocument";
@@ -58,13 +58,13 @@ export class AbcLspServer {
    */
   onSemanticTokens(uri: string): HandlerResult<SemanticTokens, void> {
     const abcDocument = this.abcDocuments.get(uri); // find doc in previously parsed docs
-    if (!abcDocument || !abcDocument.tokens2) {
+    if (!abcDocument || !abcDocument.tokens) {
       return { data: [] };
     }
 
     const builder = new SemanticTokensBuilder();
 
-    for (const token of abcDocument.tokens2) {
+    for (const token of abcDocument.tokens) {
       builder.push(
         token.line,
         token.position,
@@ -89,7 +89,7 @@ export class AbcLspServer {
       return [];
     }
 
-    const formatted = new AbcFormatter(abcDocument.ctx).format(abcDocument.AST!);
+    const formatted = new AbcFormatter(abcDocument.ctx).formatFile(abcDocument.AST!);
     const edit = TextEdit.replace(Range.create(Position.create(0, 0), Position.create(Number.MAX_VALUE, Number.MAX_VALUE)), formatted);
     return [edit];
   }

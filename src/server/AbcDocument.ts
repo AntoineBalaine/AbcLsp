@@ -1,8 +1,8 @@
-import { AbcErrorReporter, File_structure, Parser, Scanner, Token, TokensVisitor, Scanner2, Token2 } from "abc-parser";
+import { File_structure, parse, Scanner2, Token, TT } from "abc-parser";
+import { ABCContext } from "abc-parser/src/parsers/Context";
 import { Diagnostic } from "vscode-languageserver";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { mapAbcErrorsToDiagnostics, mapAbcWarningsToDiagnostics } from "./server_helpers";
-import { ABCContext } from "abc-parser/src/parsers/Context";
 
 /**
  * AbcDocument stores an Abc `TextDocument`'s diagnostics, tokens, and AST.
@@ -12,7 +12,6 @@ import { ABCContext } from "abc-parser/src/parsers/Context";
 export class AbcDocument {
   public diagnostics: Diagnostic[] = [];
   public tokens: Token[] = [];
-  public tokens2: Token2[] = [];
   public AST: File_structure | null = null;
   public ctx = new ABCContext();
   constructor(public document: TextDocument) {}
@@ -32,12 +31,15 @@ export class AbcDocument {
     this.ctx.errorReporter.resetErrors();
     this.diagnostics = [];
     this.tokens = [];
-    this.tokens2 = [];
 
-    this.tokens2 = Scanner2(source);
-    const tokens = new Scanner(source, this.ctx).scanTokens();
-    const parser = new Parser(tokens, this.ctx);
-    this.AST = parser.parse();
+    this.tokens = Scanner2(source, this.ctx);
+    // Debug: Print out all tokens for inspection
+    console.log("Actual tokens generated:");
+    this.tokens.forEach((token, i) => {
+      console.log(`${i}: ${TT[token.type]} - "${token.lexeme}"`);
+    });
+    const tokens = Scanner2(source, this.ctx);
+    this.AST = parse(tokens, this.ctx);
     let errs = mapAbcErrorsToDiagnostics(this.ctx.errorReporter.getErrors());
     let warnings = mapAbcWarningsToDiagnostics(this.ctx.errorReporter.getWarnings());
     this.diagnostics = errs.concat(warnings);
@@ -46,9 +48,7 @@ export class AbcDocument {
       return;
     }
 
-    const analyzer = new TokensVisitor(this.ctx);
-    analyzer.analyze(this.AST);
-    this.tokens = analyzer.tokens;
+    this.tokens = tokens;
 
     return tokens;
   }

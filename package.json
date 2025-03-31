@@ -26,6 +26,14 @@
         "title": "abc: Multiply Rhythms"
       },
       {
+        "command": "abc.transposeUp",
+        "title": "abc: Octaviate up"
+      },
+      {
+        "command": "abc.transposeDn",
+        "title": "abc: Octaviate down"
+      },
+      {
         "command": "abc.startMIDIInput",
         "title": "abc: MIDI Input: Start MIDI input",
         "group": "MIDI Input",

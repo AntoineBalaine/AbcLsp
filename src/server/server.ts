@@ -47,8 +47,7 @@ const abcServer = new AbcLspServer(documents, (type, params) => {
  */
 connection.onInitialize((params: InitializeParams) => {
   const capabilities = params.capabilities;
-  const hasSemanticTokensCapability =
-    !!capabilities.textDocument?.semanticTokens?.requests?.full;
+  const hasSemanticTokensCapability = !!capabilities.textDocument?.semanticTokens?.requests?.full;
   const result: InitializeResult = {
     capabilities: {
       textDocumentSync: TextDocumentSyncKind.Full,
@@ -57,7 +56,7 @@ connection.onInitialize((params: InitializeParams) => {
       completionProvider: {
         resolveProvider: true,
         triggerCharacters: ["!"],
-      }
+      },
     },
   };
   result.capabilities.documentHighlightProvider = false;
@@ -83,9 +82,7 @@ connection.onInitialize((params: InitializeParams) => {
   if (hasSemanticTokensCapability) {
     result.capabilities.semanticTokensProvider = {
       legend: {
-        tokenTypes: Object.keys(vscode_standardTokenScopes).filter((val) =>
-          Number.isNaN(parseInt(val, 10))
-        ),
+        tokenTypes: Object.keys(vscode_standardTokenScopes).filter((val) => Number.isNaN(parseInt(val, 10))),
 
         tokenModifiers: [],
       },
@@ -94,8 +91,7 @@ connection.onInitialize((params: InitializeParams) => {
     };
   }
 
-  const hasFormattingCapability =
-    !!capabilities.textDocument?.formatting?.dynamicRegistration;
+  const hasFormattingCapability = !!capabilities.textDocument?.formatting?.dynamicRegistration;
 
   if (hasFormattingCapability) {
     result.capabilities.documentFormattingProvider = true;
@@ -104,15 +100,13 @@ connection.onInitialize((params: InitializeParams) => {
   return result;
 });
 
-connection.onInitialized(() => { });
+connection.onInitialized(() => {});
 
 connection.languages.semanticTokens.on((params) => {
   return abcServer.onSemanticTokens(params.textDocument.uri);
 });
 
-connection.onDocumentFormatting((params) =>
-  abcServer.onFormat(params.textDocument.uri)
-);
+connection.onDocumentFormatting((params) => abcServer.onFormat(params.textDocument.uri));
 
 connection.onRequest("divideRhythm", (params: AbcTransformParams) => {
   return abcServer.onRhythmTransform(params.uri, "/", params.selection);
@@ -120,46 +114,52 @@ connection.onRequest("divideRhythm", (params: AbcTransformParams) => {
 connection.onRequest("multiplyRhythm", (params: AbcTransformParams) => {
   return abcServer.onRhythmTransform(params.uri, "*", params.selection);
 });
-connection.onCompletion(
-  (textDocumentPosition: TextDocumentPositionParams): CompletionItem[] => {
-    // The passed parameter contains the position of the text document in
-    // which code complete got requested.
-    const doc = abcServer.abcDocuments.get(textDocumentPosition.textDocument.uri);
-    if (!doc) {
-      return [];
-    }
-    const char = abcServer.findCharInDoc(textDocumentPosition.textDocument.uri, textDocumentPosition.position.character, textDocumentPosition.position.line);
+connection.onRequest("transposeUp", (params: AbcTransformParams) => {
+  return abcServer.onTranspose(params.uri, 12, params.selection);
+});
+connection.onRequest("transposeDn", (params: AbcTransformParams) => {
+  return abcServer.onTranspose(params.uri, -12, params.selection);
+});
 
+connection.onCompletion((textDocumentPosition: TextDocumentPositionParams): CompletionItem[] => {
+  // The passed parameter contains the position of the text document in
+  // which code complete got requested.
+  const doc = abcServer.abcDocuments.get(textDocumentPosition.textDocument.uri);
+  if (!doc) {
+    return [];
+  }
+  const char = abcServer.findCharInDoc(
+    textDocumentPosition.textDocument.uri,
+    textDocumentPosition.position.character,
+    textDocumentPosition.position.line
+  );
+
+  /**
+   * If the char is not a completion trigger, ignore.
+   */
+  if (!char || char !== "!") {
+    return [];
+  }
+  // TODO check that the char is in the body.
+  return DECORATION_SYMBOLS.map((symbol, index) => {
     /**
-     * If the char is not a completion trigger, ignore.
+     * TODO if documentation doesn't display,
+     * use the onCompletionResolve
      */
-    if (!char || char !== "!") {
-      return [];
-    }
-    // TODO check that the char is in the body.
-    return DECORATION_SYMBOLS.map((symbol, index) => {
+    return <CompletionItem>{
+      data: index + 1,
+      documentation: symbol.documentation,
+      kind: CompletionItemKind.Text,
+      insertText: symbol.label.replace(/[!]/g, ""),
+      label: symbol.label,
+      labelDetails: "decoration",
+    };
+  });
+});
 
-      /**
-       * TODO if documentation doesn't display, 
-       * use the onCompletionResolve
-       */
-      return <CompletionItem>{
-        data: index + 1,
-        documentation: symbol.documentation,
-        kind: CompletionItemKind.Text,
-        insertText: symbol.label.replace(/[!]/g, ""),
-        label: symbol.label,
-        labelDetails: "decoration",
-      };
-    });
-  }
-);
-
-connection.onCompletionResolve(
-  (item: CompletionItem): CompletionItem => {
-    return item;
-  }
-);
+connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
+  return item;
+});
 
 documents.listen(connection);
 connection.listen();

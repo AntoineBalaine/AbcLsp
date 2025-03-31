@@ -1,18 +1,18 @@
 {
-	"compilerOptions": {
-		"module": "commonjs",
-		"target": "ES2020",
-		"moduleResolution": "node",
-		"outDir": "out",
-		"lib": [
-			"ES2020"
-		],
-		"sourceMap": true,
-		"rootDir": "src",
-		"strict": true, /* enable all strict type-checking options */
-		"noImplicitReturns": true, /* Report error when not all code paths in function return a value. */
-		"noFallthroughCasesInSwitch": true, /* Report errors for fallthrough cases in switch statement. */
-		"esModuleInterop": true,
-		"skipLibCheck": true /* Skip type checking all .d.ts files. */
-	}
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "lib": ["ES2020"],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "noFallthroughCasesInSwitch": true /* Report errors for fallthrough cases in switch statement. */,
+    "noImplicitReturns": true /* Report error when not all code paths in function return a value. */,
+    "outDir": "out",
+    "rootDir": "src",
+    "skipLibCheck": true /* Skip type checking all .d.ts files. */,
+    "sourceMap": true,
+    "strict": true /* enable all strict type-checking options */,
+    "target": "ES2020"
+  },
+  "include": ["./src/**/*.ts"],
+  "exclude": ["node_modules", ".vscode-test"]
 }

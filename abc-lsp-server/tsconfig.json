@@ -1,16 +1,18 @@
 {
   "compilerOptions": {
-    "target": "es2020",
+    "baseUrl": ".",
+    "esModuleInterop": true,
     "lib": ["es2020"],
     "module": "commonjs",
     "moduleResolution": "node",
-    "sourceMap": true,
-    "strict": true,
+    "noFallthroughCasesInSwitch": true /* Report errors for fallthrough cases in switch statement. */,
+    "noImplicitReturns": true /* Report error when not all code paths in function return a value. */,
     "outDir": "out",
     "rootDir": "src",
-    "esModuleInterop": true,
-    "baseUrl": "."
+    "sourceMap": true,
+    "strict": true,
+    "target": "es2020"
   },
-  "include": ["src/**/*"],
+  "include": ["./src/**/*.ts"],
   "exclude": ["node_modules", ".vscode-test"]
 }

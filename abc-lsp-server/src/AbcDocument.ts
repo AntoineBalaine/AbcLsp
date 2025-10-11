@@ -1,4 +1,4 @@
-import { File_structure, parse, Scanner2, Token, TT } from "abc-parser";
+import { File_structure, parse, RangeVisitor, Scanner2, Token, TT } from "abc-parser";
 import { ABCContext } from "abc-parser/src/parsers/Context";
 import { Diagnostic } from "vscode-languageserver";
 import { TextDocument } from "vscode-languageserver-textdocument";
@@ -14,6 +14,7 @@ export class AbcDocument {
   public tokens: Token[] = [];
   public AST: File_structure | null = null;
   public ctx = new ABCContext();
+  public rangeVisitor = new RangeVisitor();
   constructor(public document: TextDocument) {}
   /**
    * Return an array of tokens, or void in case of failure.
@@ -40,8 +41,8 @@ export class AbcDocument {
     });
     const tokens = Scanner2(source, this.ctx);
     this.AST = parse(tokens, this.ctx);
-    let errs = mapAbcErrorsToDiagnostics(this.ctx.errorReporter.getErrors());
-    let warnings = mapAbcWarningsToDiagnostics(this.ctx.errorReporter.getWarnings());
+    let errs = mapAbcErrorsToDiagnostics(this.ctx.errorReporter.getErrors(), this.rangeVisitor);
+    let warnings = mapAbcWarningsToDiagnostics(this.ctx.errorReporter.getWarnings(), this.rangeVisitor);
     this.diagnostics = errs.concat(warnings);
 
     if (!this.AST) {

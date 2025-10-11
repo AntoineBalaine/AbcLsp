@@ -1,15 +1,15 @@
-import { AbcError, getTokenRange } from "abc-parser";
+import { AbcError, getTokenRange, RangeVisitor } from "abc-parser";
 import { TT } from "abc-parser/src/parsers/scan2";
 import { Diagnostic, PublishDiagnosticsParams } from "vscode-languageserver";
 
 /**
  * convert errors from an {@link AbcErrorReporter} to the server's {@link Diagnostic}s
  */
-export function mapAbcErrorsToDiagnostics(abcErrors: Array<AbcError>): Array<Diagnostic> {
+export function mapAbcErrorsToDiagnostics(abcErrors: Array<AbcError>, rangeVisitor: RangeVisitor): Array<Diagnostic> {
   return abcErrors.map((error): Diagnostic => {
     return {
       severity: 1,
-      range: getTokenRange(error.token),
+      range: error.token.accept(rangeVisitor),
       message: error.message,
       source: "abc",
     };
@@ -19,11 +19,11 @@ export function mapAbcErrorsToDiagnostics(abcErrors: Array<AbcError>): Array<Dia
 /**
  * convert warnings from an {@link AbcErrorReporter} to the server's {@link Diagnostic}s
  */
-export function mapAbcWarningsToDiagnostics(abcwarnings: Array<AbcError>): Array<Diagnostic> {
+export function mapAbcWarningsToDiagnostics(abcwarnings: Array<AbcError>, rangeVisitor: RangeVisitor): Array<Diagnostic> {
   return abcwarnings.map((warning): Diagnostic => {
     return {
       severity: 2,
-      range: getTokenRange(warning.token),
+      range: warning.token.accept(rangeVisitor),
       message: warning.message,
       source: "abc",
     };
@@ -58,6 +58,7 @@ export function mapTTtoStandardScope(type: number): number {
       return standardTokenScopes.string;
     case TT.INFO_STR:
       return standardTokenScopes.comment;
+    case TT.STYLESHEET_DIRECTIVE:
     case TT.INF_HDR:
     case TT.SY_HDR:
       return standardTokenScopes.keyword;
@@ -67,16 +68,17 @@ export function mapTTtoStandardScope(type: number): number {
     case TT.INLN_FLD_RGT_BRKT:
     case TT.NOTE_LETTER:
       return standardTokenScopes.variable;
+    case TT.IDENTIFIER:
     case TT.OCTAVE:
     case TT.REST:
       return standardTokenScopes.variable;
+    case TT.NUMBER:
     case TT.RHY_BRKN:
     case TT.RHY_DENOM:
     case TT.RHY_NUMER:
     case TT.RHY_SEP:
       return standardTokenScopes.number; // rhythm
     case TT.SLUR:
-    case TT.STYLESHEET_DIRECTIVE:
       return standardTokenScopes.comment;
     case TT.SYMBOL:
       return standardTokenScopes.regexp;

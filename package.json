@@ -14,6 +14,9 @@
   "activationEvents": [
     "onLanguage:abc"
   ],
+  "extensionDependencies": [
+    "alensiljak.abcjs-vscode"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
@@ -100,8 +103,7 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
+    "compile": "tsc -p ./ && cd abc-lsp-server && tsc -p ./ && cd -",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",

@@ -173,21 +173,22 @@ export namespace MIDIIn {
         if (MIDIInState.chordTimeout) {
           clearTimeout(MIDIInState.chordTimeout);
         }
+        outputNoteFn(activeNotes, accidentals, relativeMode);
 
         // If we've waited longer than the chord window, output everything as a chord
-        if (timeSinceLastNote > chordTimeWindow) {
-          // Output as a chord if we have multiple notes
-          outputNoteFn(activeNotes, accidentals, relativeMode);
-          activeNotes.clear();
-        } else {
-          // Start a timeout to wait for more possible chord notes
-          MIDIInState.chordTimeout = setTimeout(() => {
-            if (activeNotes.size > 0) {
-              outputNoteFn(activeNotes, accidentals, relativeMode);
-              activeNotes.clear();
-            }
-          }, chordTimeWindow);
-        }
+        // if (timeSinceLastNote > chordTimeWindow) {
+        //   // Output as a chord if we have multiple notes
+        //   outputNoteFn(activeNotes, accidentals, relativeMode);
+        //   activeNotes.clear();
+        // } else {
+        //   // Start a timeout to wait for more possible chord notes
+        //   MIDIInState.chordTimeout = setTimeout(() => {
+        //     if (activeNotes.size > 0) {
+        //       outputNoteFn(activeNotes, accidentals, relativeMode);
+        //       activeNotes.clear();
+        //     }
+        //   }, chordTimeWindow);
+        // }
 
         // Remove the released note
         activeNotes.delete(MIDINoteNumber);

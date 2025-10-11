@@ -1,8 +1,8 @@
-import { AbcErrorReporter, File_structure, Parser, Scanner, Token, TokensVisitor } from "abc-parser";
+import { File_structure, parse, RangeVisitor, Scanner2, Token, TT } from "abc-parser";
+import { ABCContext } from "abc-parser/src/parsers/Context";
 import { Diagnostic } from "vscode-languageserver";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { mapAbcErrorsToDiagnostics, mapAbcWarningsToDiagnostics } from "./server_helpers";
-import { ABCContext } from "abc-parser/src/parsers/Context";
 
 /**
  * AbcDocument stores an Abc `TextDocument`'s diagnostics, tokens, and AST.
@@ -14,6 +14,7 @@ export class AbcDocument {
   public tokens: Token[] = [];
   public AST: File_structure | null = null;
   public ctx = new ABCContext();
+  public rangeVisitor = new RangeVisitor();
   constructor(public document: TextDocument) {}
   /**
    * Return an array of tokens, or void in case of failure.
@@ -32,20 +33,23 @@ export class AbcDocument {
     this.diagnostics = [];
     this.tokens = [];
 
-    const tokens = new Scanner(source, this.ctx).scanTokens();
-    const parser = new Parser(tokens, this.ctx);
-    this.AST = parser.parse();
-    let errs = mapAbcErrorsToDiagnostics(this.ctx.errorReporter.getErrors());
-    let warnings = mapAbcWarningsToDiagnostics(this.ctx.errorReporter.getWarnings());
+    this.tokens = Scanner2(source, this.ctx);
+    // Debug: Print out all tokens for inspection
+    console.log("Actual tokens generated:");
+    this.tokens.forEach((token, i) => {
+      console.log(`${i}: ${TT[token.type]} - "${token.lexeme}"`);
+    });
+    const tokens = Scanner2(source, this.ctx);
+    this.AST = parse(tokens, this.ctx);
+    let errs = mapAbcErrorsToDiagnostics(this.ctx.errorReporter.getErrors(), this.rangeVisitor);
+    let warnings = mapAbcWarningsToDiagnostics(this.ctx.errorReporter.getWarnings(), this.rangeVisitor);
     this.diagnostics = errs.concat(warnings);
 
     if (!this.AST) {
       return;
     }
 
-    const analyzer = new TokensVisitor(this.ctx);
-    analyzer.analyze(this.AST);
-    this.tokens = analyzer.tokens;
+    this.tokens = tokens;
 
     return tokens;
   }

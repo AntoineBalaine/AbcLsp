@@ -4,26 +4,19 @@
 import * as path from "path";
 
 import { ExtensionContext } from "vscode";
-import {
-  LanguageClient,
-  LanguageClientOptions,
-  ServerOptions,
-  TransportKind,
-} from "vscode-languageclient/node";
+import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from "vscode-languageclient/node";
 import { registerCommands } from "./extensionCommands";
 
 let client: LanguageClient;
 
-/** 
+/**
  * This method is called when the extension is activated.
- * 
+ *
  * The extension is activated the very first time the command is executed
-*/
+ */
 export function activate(context: ExtensionContext) {
   // The server is implemented in node
-  const serverModule = context.asAbsolutePath(
-    path.join("out", "server", "server.js")
-  );
+  const serverModule = context.asAbsolutePath(path.join("dist", "server.js"));
 
   let debugOptions = { execArgv: ["--nolazy", "--inspect=6009"] };
 
@@ -45,12 +38,7 @@ export function activate(context: ExtensionContext) {
   };
 
   // Create the language client and start the client.
-  client = new LanguageClient(
-    "abcLanguageServer",
-    "ABC Language Server",
-    serverOptions,
-    clientOptions
-  );
+  client = new LanguageClient("abcLanguageServer", "ABC Language Server", serverOptions, clientOptions);
 
   // register list of extension's commands
   registerCommands(context, client);

@@ -2,9 +2,8 @@
   "name": "abc-ls",
   "displayName": "abc-ls",
   "description": "",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "publisher": "antoinebalaine",
-  "icon": "./assets/trebleclef_abc.png",
   "repository": "https://github.com/AntoineBalaine/AbcLsp",
   "engines": {
     "vscode": "^1.84.0"
@@ -15,16 +14,27 @@
   "activationEvents": [
     "onLanguage:abc"
   ],
-  "main": "./out/extension.js",
+  "extensionDependencies": [
+    "alensiljak.abcjs-vscode"
+  ],
+  "main": "./dist/extension.js",
   "contributes": {
     "commands": [
       {
         "command": "abc.divideRhythm",
-        "title": "Divide Rhythms"
+        "title": "abc: Divide Rhythms"
       },
       {
         "command": "abc.multiplyRhythm",
-        "title": "Multiply Rhythms"
+        "title": "abc: Multiply Rhythms"
+      },
+      {
+        "command": "abc.transposeUp",
+        "title": "abc: Octaviate up"
+      },
+      {
+        "command": "abc.transposeDn",
+        "title": "abc: Octaviate down"
       },
       {
         "command": "abc.startMIDIInput",
@@ -93,10 +103,12 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "pnpm run compile",
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
-    "pretest": "pnpm run compile && pnpm run lint",
+    "vscode:prepublish": "npm run package-bundle",
+    "compile": "tsc -p ./ && cd abc-lsp-server && tsc -p ./ && cd -",
+    "watch": "npm run watch-bundle",
+    "watch-bundle": "node esbuild.js --watch",
+    "package-bundle": "node esbuild.js --production",
+    "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
     "_test": "node ./out/test/runTest.js",
     "package": "vsce package",
@@ -109,6 +121,7 @@
     "@typescript-eslint/eslint-plugin": "^6.9.0",
     "@typescript-eslint/parser": "^6.9.0",
     "@vscode/test-electron": "^2.3.6",
+    "esbuild": "^0.25.10",
     "eslint": "^8.52.0",
     "glob": "^10.3.10",
     "mocha": "^10.2.0",

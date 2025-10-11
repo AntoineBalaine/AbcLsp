@@ -16,10 +16,7 @@ let client: LanguageClient;
  */
 export function activate(context: ExtensionContext) {
   // The server is implemented in node
-  // const serverModule = context.asAbsolutePath(
-  //   path.join("out", "server", "server.js")
-  // );
-  const serverModule = context.asAbsolutePath(path.join("abc-lsp-server", "out", "server.js"));
+  const serverModule = context.asAbsolutePath(path.join("dist", "server.js"));
 
   let debugOptions = { execArgv: ["--nolazy", "--inspect=6009"] };
 
